@@ -6,19 +6,19 @@ Processes input as an XML document.
 See the XSD in 'src/Input/schema/dic/input/xml-input-1.0.xsd'
 for more information about the schema.
 
-Any node/leave inside the ``<field />``-node is optional.
+All nodes inside the ``<field />`` node are optional.
 But at least one must exists.
 
 .. caution::
 
-    Because of the way XSD validates the
+    Because of the way XSD validates, the
     ``<fields>`` node must be provided before
-    the ```<groups>`` node.
+    the ``<groups>`` node.
 
 .. code-block:: xml
    :linenos:
 
-    <?xml version="1.0" encoding="UTF-8"'.'?'.'>
+    <?xml version="1.0" encoding="UTF-8"?>
     <search>
         <fields>
             <field name="field1">
