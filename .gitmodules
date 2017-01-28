@@ -1,0 +1,7 @@
+[submodule "doc/_exts"]
+	path = _exts
+	url = http://github.com/fabpot/sphinx-php
+[submodule "sphix-theme"]
+	path = _themes/rollerworks
+	url = https://github.com/rollerworks/rollerworks-sphinx-theme.git
+
