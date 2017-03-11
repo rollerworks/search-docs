@@ -13,10 +13,10 @@ RollerworksSearch
     overview
     installing
     searches
+    input
     searching_in_practice
     type
     cookbook/index
     reference/types
-    input/index
 
 .. _`1.x`: http://rollerworkssearch.readthedocs.io/en/1.x/

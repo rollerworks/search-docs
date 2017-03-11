@@ -1,13 +1,13 @@
-XmlInput
-========
+.. index::
+   single: input; xml
 
-Processes input as an XML document.
+XmlInput Format
+===============
 
-See the XSD in 'src/Input/schema/dic/input/xml-input-1.0.xsd'
-for more information about the schema.
+The provided input must be structured as described in the `XSD schema`_.
 
-All nodes inside the ``<field />`` node are optional.
-But at least one must exists.
+All nodes inside the ``<field />`` node are optional. But at least one
+must exists. Value must be properly formatted for usage in XML.
 
 .. caution::
 
@@ -22,10 +22,10 @@ But at least one must exists.
     <search>
         <fields>
             <field name="field1">
-                <single-values>
+                <simple-values>
                     <value>value</value>
                     <value>value2</value>
-                </single-values>
+                </simple-values>
 
                 <excluded-values>
                     <value>value</value>
@@ -67,10 +67,10 @@ But at least one must exists.
             <group>
                 <fields>
                     <field name="field1">
-                        <single-values>
+                        <simple-values>
                             <value>value</value>
                             <value>value2</value>
-                        </single-values>
+                        </simple-values>
                     </field>
                 </fields>
             </group>
@@ -78,10 +78,10 @@ But at least one must exists.
             <group>
                 <fields>
                     <field name="field1">
-                        <single-values>
+                        <simple-values>
                             <value>value3</value>
                             <value>value4</value>
-                        </single-values>
+                        </simple-values>
                     </field>
                 </fields>
 
@@ -91,3 +91,5 @@ But at least one must exists.
         </groups>
 
     </search>
+
+.. _`XSD schema`: https://github.com/rollerworks/search/blob/master/src/Input/schema/dic/input/xml-input-2.0.xsd

@@ -1,47 +1,54 @@
 .. index::
-   single: input; FilterQuery
+   single: input; StringQuery
 
-FilterQuery
-===========
+StringQuery Format
+==================
 
-Processes input in the FilterQuery format.
-
-The FilterQuery consists is a user-friendly syntax for providing search
+The StringQuery consists is a user-friendly syntax for providing search
 conditions. Note that input is accepted in any local including none latin
 characters.
 
 .. tip::
 
-    Spaces are ignored so that you can keep whitespace
-    between condition characters for better readability.
+    Whitespace characters (including new lines) are ignored for better
+    readability.
 
     ``field-name: value1, value2;`` and ``field-name:value1,value2;``
     Are technically the same.
 
-The syntax works using whats called query-pairs consisting of a
-field-name and list of values. Values are separated using a single coma
-(``,``).
+    But spaces within a value like ``field: hello world`` are prohibited.
+    You must quote the entire value then: ``field: "hello world"``
+
+    New lines in a value are always prohibited.
+
+The syntax consists for field-values pairs. Values are separated using
+a single coma (``,``). And pairs are separated using a single semi-colon
+(``;``)
 
 .. code-block:: php
 
     username: value1, value2;
 
-"username" is the field-name, "value1" and "value" are the values of the
+``username`` is the field-name, ``value1`` and ``value`` are the values of the
 username field.
 
 The ``;`` character at the end of the query-pair indicates that the values
-list has ended, and a new query-pair or subgroup can be started. When the
-query-pair is not followed by anything (except optional space) the ``;`` can be omitted.
+list has ended, and a new pair or subgroup can be started.
 
-.. code-block:: php
+.. tip::
 
-    field1: value1, value2; field2: value1, value2;
+    When the pair is last in the group or at the end of the input it
+    can be omitted.
 
-Can shorted to.
+    .. code-block:: php
 
-.. code-block:: php
+        field1: value1, value2; field2: value1, value2;
 
-    field1: value1, value2; field2: value1, value2
+    Can shorted to.
+
+    .. code-block:: php
+
+        field1: value1, value2; field2: value1, value2
 
 Field-name
 ----------
@@ -74,14 +81,15 @@ Values
 ------
 
 A value can be anything from a word, a sentence, number or specially
-formatted value like a date. But not all values can be used directly, if
-the value contains special characters (including spaces) the value must
-be quoted using double quotes (``"``).
+formatted value like a date. But not all values can be used directly.
 
 .. note::
 
-    Decimal numbers must be quoted as well like ``"10.00"``.
-    ``10.00`` unquoted is considered invalid!
+    If the value contains special characters (including spaces) the value
+    must be quoted using double quotes (``"``).
+
+    Special characters are: ``[<>[](),;~!*?=&*``, otherwise these characters
+    could be interpreted as value/field separate or give a syntax error.
 
 If the value itself contains double quotes these must be escaped by duplicating
 theme, so ``va"lue`` becomes ``va""lue`` and ``va""lue`` becomes ``va""""lue``.
@@ -95,19 +103,19 @@ Escaped quotes will then be normalized when processing the input.
 
     The correct usage is ``"""foo"`` which is transformed to ``"foo``
 
-Using a value like described above is whats called a "single value".
-If there are more we call them of a list of single values.
+Using a value like described above is whats called a "simple value".
+If there are more we call them of a list of simple values.
 
-But as single values alone are not really useful, you can also use
-excluded single values, (excluded) ranges, comparisons and pattern matchers.
+But as simple values alone are not really useful, you can also use
+excluded simple values, (excluded) ranges, comparisons, and pattern matchers.
 
-To mark a value as being excluded prefix it with an ``!``, this works for
-almost all value types except comparisons and pattern matcher which have
-there own syntax.
+To mark a value as being excluded prefix it with an exclamation (``!``),
+this works for almost all value types except comparisons and pattern matcher
+which have there own syntax.
 
 .. code-block:: php
 
-    field: !value, !1 - 10;
+    field: !value, !1 ~ 10;
 
 As some values are part of an expression like a range, the value is referred
 to as a value-part.
@@ -124,27 +132,27 @@ and field2 is between (inclusive) -1 and 100.
 
 .. code-block:: php
 
-    field: 1-100; field2: "-1" - 100
+    field: 1-100; field2: -1 ~ 100
 
 Each side is inclusive by default, meaning the 'value' itself and anything
-lower/higher then it. To mark a value exclusive (everything between,
+lower/higher then it. To mark a value as exclusive (everything between,
 but not the actual value) use the outer turning square brace ``]`` for the
 lower-bound and ``[`` for the upper-bound.
 
-* ``]1-100`` is equal to (higher then) 1 and (equal to or lower then) 100)
-* ``[1-100`` is equal to (equal to or higher then) 1 and (equal to or lower then) 100)
-* ``[1-100[`` is equal to (equal to or higher then) 1 and (lower then) 100)
-* ``]1-100[`` is equal to (higher then) 1 and (lower then) 100)
+* ``]1 ~ 100`` is equal to (higher then) 1 and (equal to or lower then) 100)
+* ``[1 ~ 100`` is equal to (equal to or higher then) 1 and (equal to or lower then) 100)
+* ``[1 ~ 100[`` is equal to (equal to or higher then) 1 and (lower then) 100)
+* ``]1 ~ 100[`` is equal to (higher then) 1 and (lower then) 100)
 
 You can also mark a bound explicitly inclusive using ``[`` for lower-bound
-and ``]`` for the upper-bound to mark the. But as bounds inclusive by
+and ``]`` for the upper-bound to mark the. But as bounds are inclusive by
 default you don't have to do this, it's just for explicitness.
 
 Comparison
 ~~~~~~~~~~
 
-Comparisons are very straightforward, each comparison starts with an operator
-followed by a value-part.
+Comparisons are pretty straightforward, each comparison starts with an
+operator followed by a value-part.
 
 Supported operators are:
 
@@ -156,18 +164,18 @@ Supported operators are:
 
 .. code-block:: php
 
-    field: >=1, < "-10", date: >"06/02/2015";
+    field: >=1, < -10, date: > 06/02/2015
 
 .. tip::
 
-    When ever possible try to use ranges instead of multiple comparisons,
+    Whenever possible try to use ranges instead of multiple comparisons,
     because ranges can be optimized.
 
 PatternMatch
 ------------
 
 PatternMatchers work similar to Comparisons, everything starting
-with tilde (~) is considered a pattern-matcher.
+with a tilde (``~``) is considered a pattern-matcher.
 
 Supported operators are:
 
@@ -185,60 +193,66 @@ And not the excluding equivalent.
 * ``~!?`` (does not match regex)
 * ``~!=`` (equals)
 
-Example: ``field: ~>foo, ~*"bar", ~?"^foo|bar$";``
+.. code-block:: php
 
-To mark the pattern case insensitive add an 'i' directly after the '~'.
+    field: ~> foo, ~*"bar", ~? "^foo|bar$"
 
-Example: ``field: ~i>foo, ~i!*"bar", ~i?"^foo|bar$";``
+To mark the pattern case-insensitive add an 'i' directly after the '~'.
+
+.. code-block:: php
+
+    field: ~i> foo, ~i!* "bar", ~i? "^foo|bar$";
 
 .. note::
 
-    The regex is limited to simple POSIX expressions. Actual usage is
-    handled by the storage layer, and may not fully support complex expressions.
+    A regex is limited to simple POSIX expressions. Actual usage is handled
+    by the storage layer, and may not fully support complex expressions.
 
-    Most matchers can be easily solved without regexes, always try to
+    Most matchers can be easily solved without a regex, always try to
     use a normal matcher before trying a regex.
 
 .. caution::
 
     In most languages the Regex would start and end with a delimit,
-    but in filter-query this is not the case.
+    but in StringQuery this is not the case.
 
 Subgroups
 ---------
 
-For more complex conditions you can nest query-pairs inside subgroups.
-Subgroups are separated the same way as query-pairs, using the ``;``
-character. And when the group closing character is not followed by anything
-(except optional space) the last ``;`` can be omitted.
+For more complex conditions you can nest pairs inside subgroups.
+Subgroups are separated the same way as pairs, using the ``;`` character.
+
+And just like field-values pairs, the group separation character can
+be omitted when the group is last in the group or input.
 
 .. code-block:: php
 
     (field-name: value1, value2;); (field-name: value1, value2)
 
-Or in combination with query-pairs.
+Or in combination with field-values pairs.
 
 .. code-block:: php
 
-    field-name: value1, value2; (field-name: value1, value2);
+    field-name: value1, value2; (field-name: value1, value2)
 
 .. tip::
 
-    Notice that query-pair in the second subgroup does end with a ``;``?
+    Noticed that pair in the second subgroup does not end with a ``;``?
+
     That's because the processor is smart enough to know that the group
     has ended here and it can simply ignore the missing ``;`` and continue.
-    If there was a second query-pair or nested subgroup an ``;`` is required.
+    If there was a second pair or nested subgroup an ``;`` is required.
 
 By default all groups are marked as logical AND, meaning all the fields
-within the group must give a positive match. For explicitness you can use this
-to mark the group as logical AND.
+within the group must give a positive match. For explicitness you can use
+this to mark the group as logical AND.
 
 .. code-block:: php
 
     &(field1: values; field2: values);
 
 To change a group and make it OR'ed (at least one field must give a positive
-match), prefix the group with an ``*`` character.
+match), prefix the group with a star ``*`` character.
 
 .. code-block:: php
 
@@ -249,7 +263,7 @@ If you want to head-group (the condition itself) OR'ed or AND (default) use
 
 .. code-block:: php
 
-    *field1: values; field2: values;
+    * field1: values; field2: values;
 
 .. code-block:: php
 
@@ -259,7 +273,9 @@ If you want to head-group (the condition itself) OR'ed or AND (default) use
 
     The OR'ed symbol works only on groups, because the condition always
     starts with a group the OR'ed symbol is only valid at the start of
-    a condition or subgroup. So the following is invalid: ``is_admin: t; * enabled: f;``
+    a condition or subgroup.
+
+    So the following is invalid: ``is_admin: t; * enabled: f;``
 
     But this is valid: ``is_admin: t; *(enabled: f)`` and marks subgroup 0
     as OR'ed.
