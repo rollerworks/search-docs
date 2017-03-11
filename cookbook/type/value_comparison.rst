@@ -1,5 +1,9 @@
-How to Use Value Comparisons
+How to Use Value Comparators
 ============================
+
+.. caution::
+
+    This page is not updated for Rollerworks v2.0 yet.
 
 A powerful feature of RollerworksSearch is the ability to optimize
 search conditions and perform basic validation of user input.
@@ -24,8 +28,8 @@ and you configured that the field supports ranges.
     See :doc:`data_transformers` on how to transform a user input to
     an InvoiceNumber.
 
-Creating the Comparer
----------------------
+Creating the Comparator
+-----------------------
 
 Create an ``InvoiceNumberComparison`` class - this class will be responsible
 for comparing values for equality and lower/higher ``InvoiceNumber`` objects:

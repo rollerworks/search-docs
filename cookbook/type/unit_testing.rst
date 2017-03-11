@@ -4,10 +4,14 @@
 How to Unit Test your Field Types
 =================================
 
+.. caution::
+
+    This page is not updated for Rollerworks v2.0 yet.
+
 A Field consists of 3 core object: a field type (implementing
-:class:`Rollerworks\\Component\\Search\\FieldTypeInterface`) the
-:class:`Rollerworks\\Component\\Search\\SearchField` and the
-:class:`Rollerworks\\Component\\Search\\SearchFieldView`.
+:class:`Rollerworks\\Component\\Search\\Field\\FieldType`) the
+:class:`Rollerworks\\Component\\Search\\Field\\SearchField` and the
+:class:`Rollerworks\\Component\\Search\\Field\\SearchFieldView`.
 
 The only class that is usually manipulated by programmers is the field type class
 which serves as a field blueprint. It is used to generate the ``SearchField`` and the

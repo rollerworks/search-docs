@@ -4,6 +4,10 @@
 How to Use Data Transformers
 ============================
 
+.. caution::
+
+    This page is not updated for Rollerworks v2.0 yet.
+
 You'll often find the need to transform the data the user entered in a field into
 something else for use in your search processor. You could do this in the processor
 but then you will loose some power full features (including removing duplicates

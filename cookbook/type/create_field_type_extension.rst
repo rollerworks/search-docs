@@ -4,6 +4,10 @@
 How to Create a Field Type Extension
 ====================================
 
+.. caution::
+
+    This page is not updated for Rollerworks v2.0 yet.
+
 :doc:`Custom search field types <create_custom_field_type>` are great when
 you need field types with a specific purpose, such as a gender selector,
 or a VAT number input.
