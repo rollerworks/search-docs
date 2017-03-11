@@ -1,22 +1,26 @@
 SearchConditions in action
 ==========================
 
-This chapter explains how you can use search conditions in practice,
-what kind of results you can expect with a search condition and
+This chapter explains how you can use SearchConditions in practice,
+what kind of results you can expect with a SearchCondition and
 handy tips for getting the best result.
 
-These examples shown below use the :doc:`input/filter_query`
+The examples shown below use the :doc:`input/string_query`
 syntax as input condition (condition for short).
 
 Remember that almost all values of a field are OR'ed, meaning
 that at least one value must match for the field to have a positive
 match. ``field: value1, value2`` means from the current row
-the value of column field1 must be e.g. value1 or value2;
+the value of column field1 must be e.g. ``value1`` or ``value2``;
 
 .. note::
 
     Excluded values are not use OR'ed, so ``field: !value1, !value1;``
-    will only match if field1 is not value1 and not value2;
+    will only match if field1 is not value1 *and* not value2;
+
+Notice that some values are between ``"``, this is because any value part
+that is not a single word or contains special character number must be
+quoted in the StringQuery syntax.
 
 Common mistakes and good to know
 --------------------------------
@@ -26,33 +30,33 @@ Comparison
 
 Comparisons are applied as AND, meaning all of them must give a positive
 match. So using multiple comparisons may not give the expected result.
-``field: >10, <20`` is the same as using a range like ``field: ]10-20[``.
+``field: >10, <20`` is the same as using a range like ``field: ]10 ~ 20[``.
 
-But ``field: >10, <20, >30`` will only give results when field is between
+But ``field: >10, <20, >30`` will only give results when the value is between
 10 and 20, the higher then 30 part is ignored as the first part is more
 restrictive.
 
-You can solve this by using ranges like: ``field1: 10-20, >30;``
+You can solve this by using ranges like: ``field1: 10 ~ 20, >30;``
 Or by using a subgroup like ``(field1: >10, <20); (field1: >30)``
 
 PatternMatch
 ~~~~~~~~~~~~
 
-PatternMatchers are either OR'ed or applied as AND. This depends on the
+PatternMatchers are either OR'ed or applied as AND. This depends on
 whether they are excluding or not.
 
-Take the following matchers: ``field: ~*foo; ~!*bar;``
-The first one is a "positive" matcher (field1 contains foo), the second
-one is a negative/excluding matcher (field1 does *not* contain bar).
+Take the following matchers: ``field: ~* foo; ~!* bar;``
+The first one is a "positive" matcher (field1 contains ``foo``), the second
+one is a negative/excluding matcher (field1 does *not* contain ``bar``).
 
 If both were OR'ed we would either get a result when field1 contains "foo"
-or does not contain "bar", but if field one contains "foo" but also "bar"
+or does not contain "bar", but if the field contains "foo" but also "bar"
 we would get an unexpected result. So the matchers are applied separately.
 
 .. caution::
 
-    Don't use a regex unless there is an actual expression. ``field: "^(foo|bar)"``
-    can be easily done with field: ``field1: ~>foo; field1: ~>bar"``
+    Don't use a regex unless there is an actual expression. ``field: ~? "^(foo|bar)"``
+    can be easily done with ``field: ~> foo, ~> bar"``
 
 Last tip
 ~~~~~~~~
@@ -61,7 +65,7 @@ If something is not possible because of how the condition is evaluated
 you can use subgroups to make it work.
 
 Take the PatternMatcher, say we **want to** search a field that contains
-e.g. "foo" *or* does not contain "bar". With ``field: ~*foo; ~!*bar;``
+e.g. "foo" *or* does not contain "bar". With ``field: ~* foo; ~!* bar;``
 this will not work, but if we use two subgroups ``(field: ~*foo); (field: ~!*bar);``
 it will work!
 
@@ -87,20 +91,20 @@ For all the examples assume we have the following records:
 .. tip::
 
     You are not limited a single table, the actual searching in a database
-    is done by a search processor which may support searching complex
-    structures or separated documents.
+    is done by a condition processor which may support searching complex
+    structures or separated entities.
 
     So no problem if you want to search for an invoice that has a customer
-    relationship and you want to use the customer as leading condition.
+    relationship, and you want to use the customer as leading condition.
 
 Search for users with a specific gender
 ---------------------------------------
 
-Say we want to find all users female users.
+Say we want to find all female users.
 
-We use the following condition: ``gender: female``
+Using condition: ``gender: female``
 
-We will give use the following result.
+Will give the following result.
 
 +----------+------------+--------------+-----------------+-----------+
 | id       | gender     | reg_date     | is_admin        | enabled   |
@@ -110,12 +114,11 @@ We will give use the following result.
 | 100      | female     | 2013-05-04   | f               | f         |
 +----------+------------+--------------+-----------------+-----------+
 
-Or we can use a different approach by *excluding* male from the gender
-list.
+Or we can use a different approach by *excluding* "male" from the gender list.
 
 .. code-block:: php
 
-    gender: !man;
+    gender: !male;
 
 Which will give the same result.
 
@@ -127,14 +130,12 @@ Which will give the same result.
 Search for users with a specific gender and registration date
 -------------------------------------------------------------
 
-Say we want to find all users female users, that have registered
+Say we want to find all female users, that have registered
 in or after the year 2011 but before 2015.
 *Dates are in date notation year/month/day.*
 
 The following conditions will all produce the same result, but use
 different methods to get the result.
-
-All conditions will give the following result.
 
 +----------+------------+--------------+-----------------+-----------+
 | id       | gender     | reg_date     | is_admin        | enabled   |
@@ -144,13 +145,6 @@ All conditions will give the following result.
 | 100      | female     | 2013-05-04   | f               | f         |
 +----------+------------+--------------+-----------------+-----------+
 
-.. note::
-
-    Notice that the date is between ``"``, this is because any value part that is not
-    a single word or number must be quoted in the FilterQuery syntax.
-
-    Female is a single word so this doesn't require quoting.
-
 Explicit range
 ~~~~~~~~~~~~~~
 
@@ -159,7 +153,7 @@ and "2014/12/31".
 
 .. code-block:: php
 
-    gender: female; date: "2011/01/01" - "2014/12/31";
+    gender: female; date: 2011/01/01 ~ 2014/12/31;
 
 Explicit range with exclusive bounds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -179,13 +173,13 @@ match values that are lower than "2015/01/01".
 
 .. code-block:: php
 
-    gender: female; date: "2011/01/01" - ]"2015/01/01";
+    gender: female; date: 2011/01/01 ~ ]2015/01/01;
 
 And same thing can be done for the lower-bound.
 
 .. code-block:: php
 
-    gender: female; date: ["2012/12/31" - ]"2015/01/01";
+    gender: female; date: [2012/12/31 ~ ]2015/01/01;
 
 The lower bound is now exclusive meaning it will only match a value that is higher
 than "2011/01/01".
@@ -209,7 +203,7 @@ and lower than "2014/12/31".
 
 .. code-block:: php
 
-    gender: female; date: >"2011/01/01", <"2015/01/01";
+    gender: female; date: >2011/01/01, <2015/01/01;
 
 Multiple single values
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -232,7 +226,7 @@ reason are not all shown here, this example only shows 4 dates).
     this is simply converted into a single range.
 
     But you are properly are gonna hit the maximum values per field limit. So
-    it's best to avoid this whenever possible.
+    it's best to avoid this when possible.
 
 Subgroup range
 ~~~~~~~~~~~~~~
@@ -245,13 +239,13 @@ when date is (inclusive) between "2011/01/01" and "2014/12/31".
 
 .. code-block:: php
 
-    gender: female; (date: "2011/01/01" - "2014/12/31";)
+    gender: female; (date: 2011/01/01 ~ 2014/12/31)
 
 Search for users which either have admin access or are disabled
 ---------------------------------------------------------------
 
 In the previous section we only used conditions where all the fields
-must match. But what if we want to search with an OR condition?
+must match. But what if we want to search with an *OR* condition?
 We want to search for users which either have admin access **or**
 are disabled.
 
@@ -283,7 +277,7 @@ Lets analyze this result a bit further.
 The first row matches because the user is an admin, the user is enabled
 but we can ignore this because we already have a positive match.
 
-The second row matches, the user is not an admin it's disabled
+The second row matches, the user is not an admin but it's disabled,
 so the second field has a positive match.
 
 .. note::
@@ -300,7 +294,7 @@ Search for users which either "have admin access and are disabled" or female
 
 Using OR'ed subgroups is great if want at least one field to match and
 mark the rest as optional. But this will not work if want all the fields
-to match but but just not together.
+to match, but just not together.
 
 This is where subgroup (finally) come into play. Each subgroup can have
 it's own condition which is applied secondary to the parent-group and
@@ -333,17 +327,18 @@ Will give the following result.
 Lets analyze this result a bit further.
 
 The first and second rows match because the user is a female, the second subgroup
-does not match but as subgroups are OR'ed this is no problem.
+does not match but as subgroups are OR'ed this is not a problem.
 
-The last row matches because first subgroup matches, the user is an admin and
-is disabled, the second subgroup does not match and so is ignored.
+The last row matches because the first subgroup matches, the user is an admin and
+is disabled, the second subgroup does not match and therefor is ignored.
 
 .. caution::
 
     Note that we used two subgroups, if we the placed either of the fields
-    in the root of the condition like ``gender: female; (is_admin: t; enabled: f);``
+    in the root of the condition like ``gender: female; (is_admin: t; enabled: f)``.
+
     We would have gotten a completely different result. The first subgroup must match
-    as subgroups are only OR'ed to each other.
+    as subgroups are *only OR'ed to each other*.
 
     So in practice using ``gender: female; (is_admin: t; enabled: f);``
     is the same as using ``gender: female; is_admin: t; enabled: f;``

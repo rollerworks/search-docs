@@ -189,6 +189,15 @@ And then register the extension in the system using the FactoryBuilder:
         ->addExtension(new ClientExtension())
         ->getSearchFactory();
 
+    /* ... */
+
+    use Acme\Client\Search\ClientExtension\Type\ClientIdType;
+
+    // Register type directly without using an search extension
+    $searchFactory = new Searches::createSearchFactoryBuilder()
+        ->addType(new ClientIdType())
+        ->getSearchFactory();
+
 .. note::
 
     For best performance it's advised to use a lazy loading
@@ -226,7 +235,6 @@ Topics
 
     data_transformers
     value_comparison
-    create_custom_field_type
     create_field_type_extension
     unit_testing
 

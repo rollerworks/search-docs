@@ -1,23 +1,14 @@
 Installing the Library
 ======================
 
-Installing RollerworksSearch is trivial. Usually it's just a case of
-uploading the extracted source files to your web server.
-
-Installing with Composer
-------------------------
+Installing RollerworksSearch is trivial. By using Composer to install
+the dependencies you don't have to worry about compatibility or autoloading.
 
 `Composer`_ is a dependency management library for PHP, which you can use
-to download the RollerworksSearch system.
+to download the RollerworksSearch library.
 
-Start by `downloading Composer`_ anywhere onto your local computer. If you
-have curl installed, it's as easy as:
-
-.. code-block:: bash
-
-    curl -s https://getcomposer.org/installer | php
-
-Installing RollerworksSearch with Composer is as easy as:
+Start by `downloading Composer`_ anywhere onto your local computer.
+And install RollerworksSearch with Composer by running the following:
 
 .. code-block:: bash
 
@@ -28,26 +19,47 @@ From the directory where your ``composer.json`` file is located.
 Now, Composer will automatically download all required files, and install them
 for you. After this you can start integrating RollerworksSearch with your application.
 
-Optional packages
-~~~~~~~~~~~~~~~~~
+.. note::
 
-The ``rollerworks/search`` package itself does not provide any mechanise
-for searching a storage engine (like Doctrine or ElasticSearch).
+    All code examples assume you are using the class auto-loader provided by Composer.
 
-To search in a storage engine you need to install additional packages
-or build your own SearchCondition processor.
+    .. code-block:: php
 
-To get you started we already provide a number of additional packages for searching;
+        require 'vendor/autoload.php';
 
-Doctrine
-^^^^^^^^
+        // ...
 
-* `rollerworks/search-doctrine-orm`_ allows searching a relational SQL database using `Doctrine2 ORM`_.
-* `rollerworks/search-doctrine-dbal`_ allows searching a relational SQL database using `Doctrine2 DBAL`_.
+Extensions
+----------
+
+The ``rollerworks/search`` core library itself does not provide any mechanise
+for searching in a storage engine (like Doctrine or ElasticSearch). Instead they
+are provided as separate extensions you can easily install.
+
+Framework integration libraries (provided by Rollerworks) are designed to provide
+a clear-cut and ready to use solution. Whenever you install an addition extension,
+the integration automatically enables the support for it.
+
+.. note::
+
+    Only extensions provided by Rollerworks are fully integrated, for extensions
+    provided by third party developers you need to enable these manually.
+
+Framework integration
+---------------------
+
+RollerworksSearch provides a fully featured integration for:
+
+* The :doc:`Symfony Framework <integration/symfony>`,
+* :doc:`Doctrine DBAL and ORM <integration/symfony_bundle>`.
+
+And support for ElasticSearch, Silex, Zend Framework, and Laravel coming soon.
+
+Further reading
+---------------
+
+* :doc:`Using the SearchProcessor <processing_searches>`
+* :doc:`Composing SearchConditions <composing_search_conditions>`
 
 .. _`Composer`: http://getcomposer.org/
-.. _`downloading Composer`: http://getcomposer.org/download/
-.. _`rollerworks/search-doctrine-orm`: https://github.com/rollerworks/rollerworks-search-doctrine-orm
-.. _`rollerworks/search-doctrine-dbal`: https://github.com/rollerworks/rollerworks-search-doctrine-dbal
-.. _`Doctrine2 ORM`: http://www.doctrine-project.org/projects/orm.html
-.. _`Doctrine2 dbal`: http://www.doctrine-project.org/projects/dbal.html
+.. _`downloading Composer`: https://getcomposer.org/download/
