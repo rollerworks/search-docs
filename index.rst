@@ -18,5 +18,14 @@ RollerworksSearch
     type
     cookbook/index
     reference/types
+Integrations
+------------
+
+.. toctree::
+    :maxdepth: 1
+
+    integration/doctrine/index
+    integration/symfony_bundle
+    integration/symfony_validator
 
 .. _`1.x`: http://rollerworkssearch.readthedocs.io/en/1.x/
