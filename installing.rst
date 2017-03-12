@@ -5,14 +5,14 @@ Installing RollerworksSearch is trivial. By using Composer to install
 the dependencies you don't have to worry about compatibility or autoloading.
 
 `Composer`_ is a dependency management library for PHP, which you can use
-to download the RollerworksSearch library.
+to download the RollerworksSearch library, and at your choice any extensions.
 
 Start by `downloading Composer`_ anywhere onto your local computer.
 And install RollerworksSearch with Composer by running the following:
 
 .. code-block:: bash
 
-    $ php composer.phar require rollerworks/search
+    $ php composer.phar require "rollerworks/search:^2.0"
 
 From the directory where your ``composer.json`` file is located.
 
