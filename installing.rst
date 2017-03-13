@@ -50,8 +50,8 @@ Framework integration
 
 RollerworksSearch provides a fully featured integration for:
 
-* The :doc:`Symfony Framework <integration/symfony>`,
-* :doc:`Doctrine DBAL and ORM <integration/symfony_bundle>`.
+* The :doc:`Symfony Framework <integration/symfony_bundle>`,
+* :doc:`Doctrine DBAL and ORM <integration/doctrine/index>`.
 
 And support for ElasticSearch, Silex, Zend Framework, and Laravel coming soon.
 
