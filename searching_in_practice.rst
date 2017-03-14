@@ -5,7 +5,7 @@ This chapter explains how you can use SearchConditions in practice,
 what kind of results you can expect with a SearchCondition and
 handy tips for getting the best result.
 
-The examples shown below use the :doc:`input/string_query`
+The examples shown below use the :doc:`reference/input/string_query`
 syntax as input condition (condition for short).
 
 Remember that almost all values of a field are OR'ed, meaning

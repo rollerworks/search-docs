@@ -461,4 +461,6 @@ about this! :doc:`conversions`.
 And if you get stuck with querying, there is a :doc:`Troubleshooter <troubleshooting>`
 to help you. Good luck.
 
+.. _`Doctrine ORM extension`: https://github.com/rollerworks/search-doctrine-orm
+.. _`Doctrine ORM`: http://www.doctrine-project.org/projects/orm.html
 .. _`Doctrine DBAL Types`: http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html
