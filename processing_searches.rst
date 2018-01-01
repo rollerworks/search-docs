@@ -12,7 +12,7 @@ search-processor by running:
 
     $ php composer.phar require rollerworks/search-processor
 
-The SearchProcessor requires PSR-7 (Http Message) ServerRequest class which
+The SearchProcessor requires a `PSR-7`_ (Http Message) ServerRequest class which
 is provided by many third party libraries.
 
 Don't worry if your new to PSR-7, all implementations are expected to follow
@@ -60,7 +60,7 @@ Creating a FieldSet
 -------------------
 
 Before you can start performing searches the system needs to know which
-fields you to want allow searching in. This configuration is kept in FieldSet.
+fields you to want allow searching in. This configuration is kept in a FieldSet.
 
 .. include:: fieldset.rst.inc
 
@@ -105,6 +105,7 @@ you have done so far is shown as a whole.
 
     // The ProcessorConfig can be configured for advanced use-cases,
     // and limiting the allowed complexity of a SearchCondition.
+    // See the class methods for all details.
 
     $processorConfig = new ProcessorConfig($userFieldSet);
 
@@ -122,7 +123,7 @@ you have done so far is shown as a whole.
         exit();
     }
 
-    // Normally you would use template to take care of the presentation
+    // Normally you would use a template system to take care of the presentation
     echo <<<HTML
     <form action="/search" method="post">
 
@@ -130,7 +131,7 @@ you have done so far is shown as a whole.
     <textarea id="search-condition" name="search" cols="10" rows="20">{htmlspecialchars($searchPayload->exportedCondition)}</textarea>
 
     <label for="search-format">Format ({$searchPayload->exportedFormat}): </label>
-    <select id="search-format">
+    <select id="search-format" name="format">
         <option name="json">JSON</option>
         <option name="xml">XML</option>
         <option name="string_query">StringQuery</option>
@@ -143,7 +144,7 @@ you have done so far is shown as a whole.
 
     HTML;
 
-    // Always do this check because searchCode could be malformed resulting in
+    // Always do this check because the uri-provided searchCode could be malformed resulting in
     // an invalid SearchCondition.
     if (!$payload->isValid()) {
         echo '<p>Sorry but your condition contains the following errors: <p>'.PHP_EOL;
@@ -152,7 +153,7 @@ you have done so far is shown as a whole.
         // Each error message can be easily transformed to a localized version.
         // The message contains a messageTemplate and arguments for translation.
         foreach ($payload->messages as $error) {
-           echo '<li>'.$error->patch.': '.htmlspecialchars((string) $error).'</li>'.PHP_EOL;
+           echo '<li>'.$error->path.': '.htmlspecialchars((string) $error).'</li>'.PHP_EOL;
         }
 
         echo '</ul>'.PHP_EOL;
@@ -163,7 +164,7 @@ you have done so far is shown as a whole.
     $condition = $payload->searchCondition;
 
 That's it, all input processing, optimizing and error handling is taken care of,
-but there is more. The processor creates ``searchCode`` which solves the form POST
+but there is more. The processor creates a ``searchCode`` which solves the form POST
 redirect handling for you.
 
 And this example can be used for both a Form, or a REST API end-point with one minor
@@ -179,21 +180,22 @@ to ``json``. Or ``xml`` if you prefer this.
 .. note::
 
     The input/export format can be changed using the ``format``
-    body-parameter. The loader ensures only valid formats are accepted.
+    ``ServerRequestInterface`` body-parameter. The loader ensures
+    only valid formats are accepted.
 
 Improving performance
 ---------------------
 
 The example shown above is really powerful and works really wel,
 but when you are dealing with a high traffic application and/or complex
-conditions performance will become a problem.
+conditions performance *will* become a problem.
 
 Instead of reprocessing a valid condition for every request, you can cache
 the SearchPayload and use it for another request.
 
 Reusing the processor example let's replace the processor with a CachedProcessor.
-The CachedProcessor uses PSR-16 (SimpleCache) and works similar to the ``Psr7SearchProcessor``,
-except that uses a cached SearchPayload when possible.
+The CachedProcessor uses `PSR-16`_ (SimpleCache) and works similar to the ``Psr7SearchProcessor``,
+except that it uses a cached SearchPayload when possible.
 
 .. warning::
 
@@ -214,7 +216,7 @@ except that uses a cached SearchPayload when possible.
 Done, caching is now enabled!
 
 But wait, did you know you can also change the TTL per processor?
-This will only affect new items, not items already in the cache.
+*This will only affect new items, not items already in the cache.*
 
 .. code-block:: php
 
@@ -224,11 +226,11 @@ This will only affect new items, not items already in the cache.
 Handling errors
 ---------------
 
-The example above shows processor errors in the English language and in some
-cases the information can be little verbose (eg. unsupported value types).
+The examples above show processor errors in the English language and in some
+cases the information can be a little verbose (eg. unsupported value types).
 
-Fortunately each error is more then a simple string, is in fact each error
-is an :class:`Rollerworks\\Component\\Search\\ConditionErrorMessage` object
+Fortunately each error is more then a simple string, in fact it's a
+:class:`Rollerworks\\Component\\Search\\ConditionErrorMessage` object
 with a ton of useful information:
 
 .. code-block:: php
@@ -281,15 +283,16 @@ comes pre-bundled the translations in various locales.
 .. tip::
 
     Is your language not supported yet or found a typo? Open a pull request for
-    https://github.com/rollerworks/search/tree/master/src/Resources/translations
+    https://github.com/rollerworks/search/tree/master/lib/Core/Resources/translations
 
     **Note:** All translations must be provided in the XLIFF format.
+    See the contribution guidelines for more details.
 
-Before we can continue we first need install a compatible Translator,
+Before we can continue we first need to install a compatible Translator,
 for this example we'll use the Symfony `Translator component`_.
 
 This example shows how you can use the Translator to translate error messages,
-but for more flexibility it's best to perform this logic in a HTML template.
+but for more flexibility it's best to perform the rendering logic in a template.
 
 .. code-block:: php
 
@@ -299,7 +302,7 @@ but for more flexibility it's best to perform this logic in a HTML template.
     use Rollerworks\Component\Search\ConditionErrorMessage;
 
     // Location of the translations.
-    $resourcesDirectory = ...;
+    $resourcesDirectory = dirname((new \ReflectionClass(FieldSet::class))->getFileName()).'/Resources/translations';
 
     $translator = new Translator('fr_FR', new MessageSelector());
     $translator->setFallbackLocales(array('en'));
@@ -331,25 +334,26 @@ but for more flexibility it's best to perform this logic in a HTML template.
         echo '<ul>'.PHP_EOL;
 
         foreach ($payload->messages as $error) {
-           echo '<li>'.$error->patch.': '.htmlspecialchars(translateConditionErrorMessage($error)).'</li>'.PHP_EOL;
+           echo '<li>'.$error->path.': '.htmlspecialchars(translateConditionErrorMessage($error)).'</li>'.PHP_EOL;
         }
 
         echo '</ul>'.PHP_EOL;
     }
 
-.. note::
+.. tip::
 
     Framework integrations already provide a way to translate error messages.
 
 But wait, what is ``$cause`` about? This value holds some useful information about
 what caused this error. It can be an Exception object, ``ConstraintViolation`` or anything.
-It's only meant to be used for debugging, and may contain sensitive information.
+**It's only meant to be used for debugging, and may contain sensitive information!**
 
 Further reading
 ---------------
 
-* :doc:`Using ElasticSearch <integration/elastic_search>` (coming soon)
+* :doc:`Using Elasticsearch <integration/elasticsearch/index>`
 * :doc:`Doctrine DBAL/ORM integration <integration/doctrine/index>`
 * :doc:`Visual condition builder <visual_condition_builder>` (coming soon)
 
+.. _`PSR-7`: http://www.php-fig.org/psr/psr-7/
 .. _`Translator component`: http://symfony.com/doc/current/components/translation.html

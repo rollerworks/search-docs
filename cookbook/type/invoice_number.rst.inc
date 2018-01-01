@@ -13,32 +13,32 @@ meaning its internal values can't be changed.
 
     namespace Acme\Invoice;
 
-    class InvoiceNumber
+    final class InvoiceNumber
     {
         private $year;
         private $number;
 
-        private function __construct($year, $number)
+        private function __construct(int $year, int  $number)
         {
             $this->year = $year;
             $this->number = $number;
         }
 
-        public static function createFromString($input)
+        public static function createFromString(string $input): self
         {
-            if (!is_string($input) || !preg_match('/^(?P<year>\d{4})-(?P<number>\d+)$/s', $input, $matches)) {
+            if (!preg_match('/^(?P<year>\d{4})-(?P<number>\d+)$/s', $input, $matches)) {
                 throw new \InvalidArgumentException('This not a valid invoice number.');
             }
 
             return new InvoiceNumber((int) $matches['year'], (int) ltrim($matches['number'], '0'));
         }
 
-        public function equals(InvoiceNumber $input)
+        public function equals(InvoiceNumber $input): bool
         {
             return $input == $this;
         }
 
-        public function isHigher(InvoiceNumber $input)
+        public function isHigher(InvoiceNumber $input): bool
         {
             if ($this->year > $input->year) {
                 return true;
@@ -51,7 +51,7 @@ meaning its internal values can't be changed.
             return false;
         }
 
-        public function isLower(InvoiceNumber $input)
+        public function isLower(InvoiceNumber $input): bool
         {
             if ($this->year < $input->year) {
                 return true;
@@ -64,7 +64,7 @@ meaning its internal values can't be changed.
             return false;
         }
 
-        public function __toString()
+        public function __toString(): string
         {
             // Return the invoice number with leading zero
             return sprintf('%d-%04d', $this->year, $this->number);

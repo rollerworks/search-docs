@@ -10,20 +10,22 @@ How to Use Data Transformers
 
 You'll often find the need to transform the data the user entered in a field into
 something else for use in your search processor. You could do this in the processor
-but then you will loose some power full features (including removing duplicates
-and validating ranges).
+but then you will loose some powerful features (like removing duplicates or overlapping
+values).
 
 Say you have an invoice number that is provided in a special format
 like '2015-134', the first part is the year and second a number relative
 to the year. 2015-134 means number 134 of the year 2015.
 
-Passing this value to the system it a bit troubling, because the system
-has no idea how to handle this format. It looks like a number but it's not.
+The system has no idea how to handle this format. It looks like a number but it's not.
+This is where DataTransformers come into play.
 
-It would be better if this value was in an InvoiceNumber value object,
-so the system can work with. This is where Data Transformers come into play.
+A DataTransformer serves two purposes, it reverse-transformer a user-input
+value into a Model value format (like an object or a PHP primitive type).
 
-The InvoiceNumber object is known as a normalized value.
+And can transform this Model format back into a user friendly output.
+
+The InvoiceNumber object in this example is such a model value.
 
 .. include:: invoice_number.rst.inc
 
@@ -31,10 +33,7 @@ Creating the Transformer
 ------------------------
 
 Create an ``InvoiceNumberTransformer`` class - this class will be responsible
-for converting to and from the invoice number and the ``InvoiceNumber`` object:
-
-.. code-block:: php
-    :linenos:
+for converting to and from the invoice number and the ``InvoiceNumber`` object::
 
     // src/Acme/Invoice/Search/DataTransformer/InvoiceNumberTransformer.php
 
@@ -87,11 +86,8 @@ for converting to and from the invoice number and the ``InvoiceNumber`` object:
 Using the Transformer
 ---------------------
 
-Now that you have the transformer built, you just need to add it to your
-invoice field type.
-
-.. code-block:: php
-    :linenos:
+Now that you have the transformer built, you need to add it to your
+invoice field type::
 
     // src/Acme/Invoice/Search/Type/InvoiceNumberType.php
 
@@ -106,7 +102,7 @@ invoice field type.
     {
         public function buildType(FieldConfigInterface $config, array $options)
         {
-            $config->addViewTransformer(new InvoiceNumberTransformer());
+            $config->setViewTransformer(new InvoiceNumberTransformer());
         }
 
         public function getName()
@@ -116,11 +112,35 @@ invoice field type.
     }
 
 Cool, you're done! Your user will be able to enter an invoice number into the
-field and it will be transformed back into an InvoiceNumber object. This means
+field and it will be transformed back into an ``InvoiceNumber`` object. This means
 after a successful transformation, the system will pass an ``InvoiceNumber``
 object instead of a string value.
 
 And when exporting the value the original format is shown.
+
+View or Norm DataTransformer
+----------------------------
+
+A DataTransformer always transformer between two different formats
+the input to model (``reverseTransform``) and model to original format
+(``transform``).
+
+But there is more to DataTransformers, depending on the input format
+you work with either a view format or a normalized (norm) format.
+
+*The view is for a localized representation of a value like a local data,
+while the norm format allows to provide the value in an export friendly
+format like an ISO data format.*
+
+The view-format is used mainly by the StringQuery input format, while
+*all* other input processors use a normalized (or norm) format.
+
+*Which DataTransformer and format will be used depends on the input processor
+implementation.*
+
+But as a rule of thumb, unless a norm DataTransformer is set for the field,
+each input processor will use the view DataTransformer of the field.
+And fallback to a simple string conversion if neither are set.
 
 So why Use the Data Transformer?
 --------------------------------

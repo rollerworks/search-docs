@@ -8,19 +8,19 @@ handy tips for getting the best result.
 The examples shown below use the :doc:`reference/input/string_query`
 syntax as input condition (condition for short).
 
-Remember that almost all values of a field are OR'ed, meaning
+**Remember that almost all values of a field are OR'ed, meaning
 that at least one value must match for the field to have a positive
-match. ``field: value1, value2`` means from the current row
+match.** ``field: value1, value2`` means from the current row
 the value of column field1 must be e.g. ``value1`` or ``value2``;
 
 .. note::
 
-    Excluded values are not use OR'ed, so ``field: !value1, !value1;``
-    will only match if field1 is not value1 *and* not value2;
+    **Excluded values are not OR'ed**, ``field: !value1, !value2;``
+    will only match if: field1 is not value1 *and* not value2;
 
 Notice that some values are between ``"``, this is because any value part
-that is not a single word or contains special character number must be
-quoted in the StringQuery syntax.
+that is not a single word or contains special character must be quoted in
+the StringQuery syntax.
 
 Common mistakes and good to know
 --------------------------------
@@ -33,7 +33,7 @@ match. So using multiple comparisons may not give the expected result.
 ``field: >10, <20`` is the same as using a range like ``field: ]10 ~ 20[``.
 
 But ``field: >10, <20, >30`` will only give results when the value is between
-10 and 20, the higher then 30 part is ignored as the first part is more
+10 and 20, the 'higher then 30' part is ignored as the first part is more
 restrictive.
 
 You can solve this by using ranges like: ``field1: 10 ~ 20, >30;``
@@ -45,18 +45,13 @@ PatternMatch
 PatternMatchers are either OR'ed or applied as AND. This depends on
 whether they are excluding or not.
 
-Take the following matchers: ``field: ~* foo; ~!* bar;``
+Take the following matchers: ``field1: ~* foo; ~!* bar;``
 The first one is a "positive" matcher (field1 contains ``foo``), the second
 one is a negative/excluding matcher (field1 does *not* contain ``bar``).
 
 If both were OR'ed we would either get a result when field1 contains "foo"
 or does not contain "bar", but if the field contains "foo" but also "bar"
 we would get an unexpected result. So the matchers are applied separately.
-
-.. caution::
-
-    Don't use a regex unless there is an actual expression. ``field: ~? "^(foo|bar)"``
-    can be easily done with ``field: ~> foo, ~> bar"``
 
 Last tip
 ~~~~~~~~
@@ -75,7 +70,7 @@ What to expect with a condition
 For all the examples assume we have the following records:
 
 +----------+------------+--------------+-----------------+-----------+
-| id       | gender     | reg_date     | is_admin        | enabled   |
+| id       | sex        | reg_date     | is_admin        | enabled   |
 +==========+============+==============+=================+===========+
 | 10       | male       | 2011-01-04   | t               | t         |
 +----------+------------+--------------+-----------------+-----------+
@@ -97,48 +92,48 @@ For all the examples assume we have the following records:
     So no problem if you want to search for an invoice that has a customer
     relationship, and you want to use the customer as leading condition.
 
-Search for users with a specific gender
+Search for users with a specific sex
 ---------------------------------------
 
 Say we want to find all female users.
 
-Using condition: ``gender: female``
+Using condition: ``sex: female``
 
 Will give the following result.
 
 +----------+------------+--------------+-----------------+-----------+
-| id       | gender     | reg_date     | is_admin        | enabled   |
+| id       | sex        | reg_date     | is_admin        | enabled   |
 +==========+============+==============+=================+===========+
 | 20       | female     | 2011-01-04   | f               | f         |
 +----------+------------+--------------+-----------------+-----------+
 | 100      | female     | 2013-05-04   | f               | f         |
 +----------+------------+--------------+-----------------+-----------+
 
-Or we can use a different approach by *excluding* "male" from the gender list.
+Or we can use a different approach by *excluding* "male" from the sex list.
 
 .. code-block:: php
 
-    gender: !male;
+    sex: !male;
 
 Which will give the same result.
 
 .. note::
 
-    If we had another gender type like "N/A". Then we would have
-    gotten all female users and users with gender "N/A".
+    If we had another sex type like "N/A". Then we would have
+    gotten all female users and users with sex "N/A".
 
-Search for users with a specific gender and registration date
+Search for users with a specific sex and registration date
 -------------------------------------------------------------
 
 Say we want to find all female users, that have registered
 in or after the year 2011 but before 2015.
-*Dates are in date notation year/month/day.*
+*Dates are in ISO date notation year/month/day.*
 
 The following conditions will all produce the same result, but use
 different methods to get the result.
 
 +----------+------------+--------------+-----------------+-----------+
-| id       | gender     | reg_date     | is_admin        | enabled   |
+| id       | sex        | reg_date     | is_admin        | enabled   |
 +==========+============+==============+=================+===========+
 | 20       | female     | 2011-01-04   | f               | f         |
 +----------+------------+--------------+-----------------+-----------+
@@ -148,12 +143,12 @@ different methods to get the result.
 Explicit range
 ~~~~~~~~~~~~~~
 
-Find where gender is female and date is (inclusive) between "2011/01/01"
+Find where sex is female and date is (inclusive) between "2011/01/01"
 and "2014/12/31".
 
 .. code-block:: php
 
-    gender: female; date: 2011/01/01 ~ 2014/12/31;
+    sex: female; date: 2011/01/01 ~ 2014/12/31;
 
 Explicit range with exclusive bounds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,7 +157,7 @@ Sometimes the upper-value is not really predictable, for example you want to
 search for a date that falls in a leap year. Instead of figuring out the last
 day of the month you can use an exclusive upper-bound.
 
-Find where gender is female and date is between (inclusive) "2011/01/01"
+Find where sex is female and date is between (inclusive) "2011/01/01"
 and (exclusive) "2014/12/31".
 
 The lower bound is inclusive (by default) meaning it will only match a value
@@ -173,13 +168,13 @@ match values that are lower than "2015/01/01".
 
 .. code-block:: php
 
-    gender: female; date: 2011/01/01 ~ ]2015/01/01;
+    sex: female; date: 2011/01/01 ~ ]2015/01/01;
 
-And same thing can be done for the lower-bound.
+And the same principle can be used for the lower-bound.
 
 .. code-block:: php
 
-    gender: female; date: [2012/12/31 ~ ]2015/01/01;
+    sex: female; date: [2012/12/31 ~ ]2015/01/01;
 
 The lower bound is now exclusive meaning it will only match a value that is higher
 than "2011/01/01".
@@ -198,12 +193,12 @@ but is defined differently.
 
     So avoid using implicit ranges whenever possible.
 
-Find where gender is female and date is higher than "2011/01/01"
+Find where sex is female and date is higher than "2011/01/01"
 and lower than "2014/12/31".
 
 .. code-block:: php
 
-    gender: female; date: >2011/01/01, <2015/01/01;
+    sex: female; date: >2011/01/01, <2015/01/01;
 
 Multiple single values
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -217,7 +212,7 @@ reason are not all shown here, this example only shows 4 dates).
 
 .. code-block:: php
 
-    gender: female; date: "2011/01/02", "2011/01/03", "2011/01/04", "2011/01/05";
+    sex: female; date: "2011/01/02", "2011/01/03", "2011/01/04", "2011/01/05";
 
 .. tip::
 
@@ -234,12 +229,12 @@ Subgroup range
 Using subgroups in this case is just an example, normally you would use
 one of the methods described above.
 
-Find where gender is female and subgroup 0 is matching, subgroup 0 matches
+Find where sex is female and subgroup 0 is matching, subgroup 0 matches
 when date is (inclusive) between "2011/01/01" and "2014/12/31".
 
 .. code-block:: php
 
-    gender: female; (date: 2011/01/01 ~ 2014/12/31)
+    sex: female; (date: 2011/01/01 ~ 2014/12/31)
 
 Search for users which either have admin access or are disabled
 ---------------------------------------------------------------
@@ -261,7 +256,7 @@ Using condition:
 Will give the following result.
 
 +----------+------------+--------------+-----------------+-----------+
-| id       | gender     | reg_date     | is_admin        | enabled   |
+| id       | sex        | reg_date     | is_admin        | enabled   |
 +==========+============+==============+=================+===========+
 | 10       | male       | 2011-01-04   | t               | t         |
 +----------+------------+--------------+-----------------+-----------+
@@ -304,7 +299,7 @@ Using condition:
 
 .. code-block:: php
 
-    (is_admin: t; enabled: f); (gender: female);
+    (is_admin: t; enabled: f); (sex: female);
 
 .. note::
 
@@ -315,7 +310,7 @@ Using condition:
 Will give the following result.
 
 +----------+------------+--------------+-----------------+-----------+
-| id       | gender     | reg_date     | is_admin        | enabled   |
+| id       | sex        | reg_date     | is_admin        | enabled   |
 +==========+============+==============+=================+===========+
 | 20       | female     | 2011-01-04   | f               | f         |
 +----------+------------+--------------+-----------------+-----------+
@@ -335,10 +330,10 @@ is disabled, the second subgroup does not match and therefor is ignored.
 .. caution::
 
     Note that we used two subgroups, if we the placed either of the fields
-    in the root of the condition like ``gender: female; (is_admin: t; enabled: f)``.
+    in the root of the condition like ``sex: female; (is_admin: t; enabled: f)``.
 
     We would have gotten a completely different result. The first subgroup must match
     as subgroups are *only OR'ed to each other*.
 
-    So in practice using ``gender: female; (is_admin: t; enabled: f);``
-    is the same as using ``gender: female; is_admin: t; enabled: f;``
+    So in practice using ``sex: female; (is_admin: t; enabled: f);``
+    is the same as using ``sex: female; is_admin: t; enabled: f;``
