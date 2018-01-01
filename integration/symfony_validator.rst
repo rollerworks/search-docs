@@ -19,12 +19,12 @@ Validation extension by running:
     $ php composer.phar require rollerworks/search-symfony-validator
 
 And enable the ``Rollerworks\Component\Search\Extension\Symfony\Validator\ValidatorExtension``
-in the `SearchFactoryBuilder` and pass the Input Validator to your Input Processor.
+in the ``SearchFactoryBuilder`` and pass the Input Validator to your Input Processor.
 
 .. note::
 
-    The Symfony framework integration bundle already enables the
-    validator extension when you install the extension as described above.
+    The RollerworksSearchBundle already enables the validator extension when
+    you install the extension as described above.
 
 .. code-block:: php
     :linenos:
@@ -56,24 +56,18 @@ Before you continue make sure you have a good understanding of what Constraints
 are and how they are to be used. See `Symfony Validator component`_ for
 more information.
 
-You can configure the constraint on a per-field basis when building your FieldSet:
-
-.. code-block:: php
-    :linenos:
+You can configure the constraint on a per-field basis when building your FieldSet::
 
     use Symfony\Component\Validator\Constraints as Assert;
     use Rollerworks\Component\Search\Extension\Core\Type\IntegerType;
 
-    // ..
+    // ...
 
     $fieldSetBuilder = $searchFactory->createFieldSetBuilder()
     $fieldSetBuilder->add('id', IntegerType::class, ['constraints' => new Assert\Range(['min' => 5])]);
 
 Or when your (custom) type always needs these specific constraints make the constraints
-part of the field type using the ``configureOptions`` method of the field type. Using:
-
-.. code-block:: php
-    :linenos:
+part of the field type using the ``configureOptions`` method of the field type. Using::
 
     public function configureOptions(OptionsResolver $resolver)
     {

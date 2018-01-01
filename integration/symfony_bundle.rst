@@ -5,8 +5,12 @@ Symfony is a **PHP framework** for web applications and a set of
 reusable PHP components. Integration for RollerworksSearch in a
 Symfony application, is provided using the RollerworksSearchBundle.
 
-You need at least the Symfony FrameworkBundle v3.3 or higher,
-all other requirements are automatically installed and enabled.
+You need the Symfony FrameworkBundle and optionally Symfony Flex,
+while not required the following examples assume your using at least
+Symfony 3.4 and have Symfony Flex installed.
+
+All RollerworksSearch services are can autowired.
+There service-id's are shown for reference.
 
 .. note::
 
@@ -14,7 +18,7 @@ all other requirements are automatically installed and enabled.
     about the basics of Symfony first.
 
     These examples assume you know how to work with services,
-    create Controllers and know how how to change your app's
+    create Controllers and know how to change your app's
     configuration.
 
 Installation
@@ -27,37 +31,19 @@ symfony Bundle by running:
 
     $ php composer.phar require rollerworks/search-bundle
 
-And register the bundle in the kernel of your application, like this:
-
-.. code-block:: php
-    :linenos:
-
-    // in AppKernel::registerBundles()
-    $bundles = [
-        // ...
-        new Rollerworks\Bundle\SearchBundle\RollerworksSearchBundle(),
-    ];
-
-Your ``AppKernel`` is usually located in the ``app`` directory,
-see the Symfony documentation for more information on installing bundles.
-
 .. tip::
 
-    Install the RollerworksSearch Symfony InputValidator
+    Install the RollerworksSearch :doc:`symfony_validator`
     extension to utilize validation constraints in your input.
 
-    .. code-block:: bash
-
-        $ php composer.phar require rollerworks/search-symfony-validator
-
     Make sure the ``framework.validator`` is enabled in your application's
-    configuration, unless disabled this should be automatically enabled.
+    configuration, unless explicitly disabled this should be automatically enabled.
 
 Basic usage
 -----------
 
 The purpose of the bundle is to integrate RollerworksSearch into your
-Symfony application. Because of this most of library's documentation
+Symfony application. Because of this most of RollerworksSearch's documentation
 can be used as-is.
 
 The main difference is that the integration is already done for you,
@@ -66,10 +52,7 @@ and you use the ServiceContainer instead of initializing classes yourself.
 SearchFactory
 ~~~~~~~~~~~~~
 
-Get the (default) SearchFactory service using ``rollerworks_search.factory``:
-
-.. code-block:: php
-    :linenos:
+Get the (default) SearchFactory service using ``rollerworks_search.factory``::
 
     ...
 
@@ -99,10 +82,7 @@ See also :doc:`/processing_searches` for more information and details.
         $ composer require --no-update "zendframework/zend-diactoros"
         $ composer update
 
-Get the (default) SearchProcessor service using ``rollerworks_search.search_processor``:
-
-.. code-block:: php
-    :linenos:
+Get the (default) SearchProcessor service using ``rollerworks_search.search_processor``::
 
     namespace Acme\Controller;
 
@@ -204,9 +184,8 @@ To register a type, create a service as normal and tag it as ``rollerworks_searc
 
         $container->setDefinition(MyType::class, $definition);
 
-
 To register a type extension, create a service as normal and tag it as ``rollerworks_search.type_extension``
-and a ``extended-type`` attribute.
+and a ``extended-type`` attribute with name of the type this extension applies to.
 
 .. configuration-block::
 
@@ -219,7 +198,7 @@ and a ``extended-type`` attribute.
             xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
             <services>
-                <service id="Acme\Search\Type\MyType" public="false">
+                <service id="Acme\Search\Type\MyType">
                     <tag name="rollerworks_search.type" extended-type="Rollerworks\Component\Search\Extension\Core\Type\SearchFieldType" />
                 </service>
             </services>
@@ -230,7 +209,6 @@ and a ``extended-type`` attribute.
 
         services:
             'Acme\Search\Type\MyType':
-                public: false
                 tags:
                     - { name: rollerworks_search.type, extended-type: 'Rollerworks\Component\Search\Extension\Core\Type\SearchFieldType' }
 
@@ -242,31 +220,28 @@ and a ``extended-type`` attribute.
         use Symfony\Component\DependencyInjection\Definition;
 
         $definition = new Definition(MyType::class);
-        $definition->setPublic(false);
         $definition->addTag('rollerworks_search.type', ['extended-type' => SearchFieldType::class]);
 
         $container->setDefinition(MyType::class, $definition);
 
-.. tip::
-
-    Both types and type extensions services can be marked private
-    for better performance.
-
-Doctrine integration
+Condition processors
 --------------------
 
 Second to SearchFactory and SearchProcessor the bundle provides an integration
-for the Doctrine DBAL and/or ORM extensions of RollerworksSearch.
+all build-in condition processors (Doctrine DBA/ORM) and Elasticsearch.
 
-Again, you need to first install these extensions, and install and register
-the `DoctrineBundle`_.
+Doctrine integration
+~~~~~~~~~~~~~~~~~~~~
+
+Doctrine integration requires the `DoctrineBundle`_ is installed
+and properly configured.
 
 See :doc:`doctrine/index` for more information on usage details.
 
 .. code-block:: bash
 
     $ composer require --no-update "doctrine/doctrine-bundle:^1.1"
-    $ composer require --no-update "rollerworks/search-doctrine-dbal:^2.0"
+    $ composer require --no-update "rollerworks/search-doctrine-dbal"
     $ composer update
 
 To install the ORM extension run:
@@ -305,7 +280,7 @@ To disable/enable the extension use the following:
     The DBAL extension cannot be disabled when ORM extension is enabled.
 
 Basic Usage
-~~~~~~~~~~~
+***********
 
 Usage of the Doctrine extensions is as you expect, both the DBAL and ORM
 factories are automatically registered:
@@ -320,7 +295,7 @@ factories are automatically registered:
     $doctrineOrmFactory = $container->get('rollerworks_search.doctrine_orm.factory');
 
 Enable Caching
-~~~~~~~~~~~~~~
+**************
 
 By default the Doctrine integration doesn't have caching enabled, to enable caching
 of generated SQL/DQL conditions configure the ``rollerworks_search.doctrine.cache`` pool.
@@ -330,8 +305,6 @@ of generated SQL/DQL conditions configure the ``rollerworks_search.doctrine.cach
     .. code-block:: yaml
         :linenos:
 
-        # Configures the `rollerworks.search_processor.cache` pool, but only when the processor
-        # is actually installed.
         framework:
             cache:
                 rollerworks_search.doctrine.cache:
@@ -359,9 +332,9 @@ of generated SQL/DQL conditions configure the ``rollerworks_search.doctrine.cach
 Bundle configuration reference
 ------------------------------
 
-This subsection shows the complete the bundle's configuration,
-for reference. Note that extensions are disabled by default, and will be
-automatically enabled when there related dependency is installed.
+This subsection shows the complete the bundle's configuration, for reference.
+Note that extensions are disabled by default, and will be automatically enabled
+when there related dependency is installed.
 
 .. configuration-block::
 

@@ -15,7 +15,7 @@ extension by running:
 Enabling Integration
 --------------------
 
-And enable the :class:`Rollerworks\\Component\\Search\\Extension\\Doctrine\\Dbal\\DoctrineDbalExtension`
+And enable the :class:`Rollerworks\\Component\\Search\\Extension\\Doctrine\\Orm\\DoctrineOrmExtension`
 *and* :class:`Rollerworks\\Component\\Search\\Extension\\Doctrine\\Dbal\\DoctrineDbalExtension`
 for the ``SearchFactoryBuilder``. To adds extra options for registering :doc:`conversions`
 and ensuring core types work properly.
@@ -34,12 +34,12 @@ and ensuring core types work properly.
         // ...
         ->getSearchFactory();
 
-That's it, you can use RollerworksSearch with Doctrine DBAL support enabled.
+That's it, you can use RollerworksSearch with Doctrine ORM (and DBAL) support enabled.
 Continue reading to learn how the query the database with a SearchCondition.
 
 .. note::
 
-    Make sure to also enable the `DoctrineDbalExtension` because columns and
+    Make sure to also enable the ``DoctrineDbalExtension`` because columns and
     value conversions are provided by DBAL not ORM.
 
 Querying the database
@@ -65,17 +65,14 @@ The ``DoctrineOrmFactory`` class provides an entry point for creating
 :class:`Rollerworks\\Component\\Search\\Doctrine\\Orm\\CachedNativeQueryConditionGenerator`
 object instances.
 
-Initiating the ``DoctrineOrmFactory`` is as simple as.
-
-.. code-block:: php
-    :linenos:
+Initiating the ``DoctrineDbalFactory`` is as simple as::
 
     use Rollerworks\Component\Search\Doctrine\Orm\DoctrineOrmFactory;
 
     // \Psr\SimpleCache\CacheInterface | null
     $cache = ...;
 
-    $doctrineOrmFactory = new DoctrineOrmFactory($cache);
+    $doctrineDbalFactory = new DoctrineOrmFactory($cache);
 
 The ``$cache`` must a PSR-16 (SimpleCache) implementation, or can it
 can be omitted to disable the caching of generated conditions.
@@ -85,7 +82,7 @@ See also: :doc:`/reference/caching`
 Using the ConditionGenerator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Depending on whether you use the ``Doctrine\ORM\Query`` or ``Doctrine\ORM\NativeQuery``
+Depending on whether you use a ``Doctrine\ORM\Query`` or ``Doctrine\ORM\NativeQuery``
 the returned ConditionGenerator will be different.
 
 Both ConditionGenerators implement the same interface and API but the Where-clause
@@ -101,10 +98,7 @@ specific SQL condition.
     or Database driver. Meaning that when you generated a query with the
     SQLite database driver this query will not work on MySQL.
 
-First create a ``ConditionGenerator``:
-
-.. code-block:: php
-    :linenos:
+First create a ``ConditionGenerator``::
 
     // ...
 
@@ -119,11 +113,9 @@ First create a ``ConditionGenerator``:
     $conditionGenerator = $doctrineOrmFactory->createConditionGenerator($statement, $searchCondition);
 
 Before the condition can be generated, the ConditionGenerator needs to know how
-your fields are mapped to which columns column and table/Entity. To configure this
-field-to-column mapping, use the ``setField`` method on the ConditionGenerator:
-
-.. code-block:: php
-    :linenos:
+your search fields are mapped to which columns and Entity.
+To configure this field-to-column mapping, use the ``setField`` method on the
+ConditionGenerator::
 
     /**
      * Set the search field to Entity mapping mapping configuration.
@@ -146,31 +138,26 @@ field-to-column mapping, use the ``setField`` method on the ConditionGenerator:
      * If the entity field is used in a many-to-many relation you must to reference the
      * targetEntity that is set on the ManyToMany mapping and use the entity field of that entity.
      *
-     * @param string $fieldName   Name of the search field as registered in the FieldSet or
-     *                            `field-name#mapping-name` to configure a secondary mapping
-     * @param string $property    Entity field name
-     * @param string $alias       Table alias as used in the query "u" for `FROM Acme:Users AS u`
-     * @param string $entity      Entity name (FQCN or Doctrine aliased)
-     * @param string|Type $dbType Doctrine DBAL supported type, eg. string (not text)
+     * @param string $fieldName Name of the search field as registered in the FieldSet or
+     *                          `field-name#mapping-name` to configure a secondary mapping
+     * @param string $property  Entity field name
+     * @param string $alias     Table alias as used in the query "u" for `FROM Acme:Users AS u`
+     * @param string $entity    Entity name (FQCN or Doctrine aliased)
+     * @param string $dbType    Doctrine DBAL supported type, eg. string (not text)
      *
      * @throws UnknownFieldException  When the field is not registered in the fieldset
      * @throws BadMethodCallException When the where-clause is already generated
      *
      * @return $this
      */
-    $conditionGenerator->setField(string $fieldName, string $property, string $alias = null, string $entity = null, $dbType = null);
-
-The first parameter is the search field-name as registered in the provided FieldSet
-(with optionally a mapping-name to allow mapping a field to multiple columns).
-Followed by the entities property name, alias, entity class and dbal-type
-(as provided by Doctrine DBAL).
+    $conditionGenerator->setField(string $fieldName, string $property, string $alias = null, string $entity = null, string $dbType = null);
 
 The ``$alias`` and ``$entity`` arguments are marked optional, however they are
 in fact required. A field mapping can not function with an alias an Entity
 class.
 
 But instead of having to supply this for every field you can set a default
-alias an entity name using ``setDefaultEntity``. Which has an interesting feature:
+alias an entity name using ``setDefaultEntity``. Which has an interesting feature.
 
 Calling this method after calling ``setField`` will not affect fields that
 were already configured. Which means you can use this method to configure
@@ -180,6 +167,21 @@ chunks of configuration.
 
     // ...
 
+    /**
+     * Set the default entity mapping configuration, only for fields
+     * configured *after* this method.
+     *
+     * Note: Calling this method after calling setField() will not affect
+     * fields that were already configured. Which means you can use this
+     * method to configure chunks of configuration.
+     *
+     * @param string $entity Entity name (FQCN or Doctrine aliased)
+     * @param string $alias  Table alias as used in the query "u" for `FROM Acme:Users AS u`
+     *
+     * @throws BadMethodCallException When the where-clause is already generated
+     *
+     * @return $this
+     */
     $conditionGenerator->setDefaultEntity('Acme:Invoice', 'I');
     $conditionGenerator->setField('id', 'id');
 
@@ -199,9 +201,9 @@ chunks of configuration.
         $entityManager->getConfiguration()->addEntityNamespace('Acme', 'Acme\Entity');
 
 Only SearchFields in the FieldSet that have a column-mapping configured
-will be processed. All other fields are simply ignored.
+will be processed. All other SearchFields are simply ignored.
 
-If you try to configure a column-mapping for a unregistered SearchField
+If you try to configure a field-mapping for a unregistered SearchField
 the ConditionGenerator will fail with an exception.
 
 .. caution::
@@ -215,11 +217,10 @@ the ConditionGenerator will fail with an exception.
     ``Invoice.customer``.
 
     If you point to a Join association the generator will throw an exception.
-
     This limitation only applies for DQL and not NativeQuery.
 
-    In NativeQuery however you must provide the ``$type`` as this
-    cannot be automatically resolved.
+    In NativeQuery you must provide the ``$type`` as this cannot be
+    automatically resolved.
 
 The ``$type`` (when given) must correspond to a Doctrine DBAL
 support type. So instead of using ``varchar`` you use ``string``.
@@ -229,7 +230,7 @@ See `Doctrine DBAL Types`_ for a complete list of types and options.
 If you have a type which requires the setting of options you may need
 to use a :ref:`ValueConversion <value_conversion>` instead.
 
-After this you are ready to generate the DQL/SQL condition.
+After this you are ready to generate the query condition.
 
 Generating the Condition
 ************************
@@ -272,9 +273,7 @@ Generating the Condition
 Now to apply the generated condition on the query you have two options;
 
 You can use ``updateQuery`` which updates the query for you and sets
-the Query-hints for DQL, but only when there is an actual condition generated:
-
-.. code-block:: php
+the Query-hints for DQL, but only when there is an actual condition generated::
 
     // ...
 
@@ -287,9 +286,7 @@ the Query-hints for DQL, but only when there is an actual condition generated:
     $conditionGenerator->updateQuery(' AND ');
 
 Or if you want to do more with the generated condition, you can update
-the query yourself:
-
-.. code-block:: php
+the query yourself::
 
     ...
 
@@ -302,7 +299,7 @@ the query yourself:
 
         // The QueryHints are only needed for DQL Queries
         // the NativeWhereBuilder doesn't have these method.
-        $query->setHint($conditionGenerator->getQueryHintName(), $conditionGenerator->getQueryHintValue()());
+        $query->setHint($conditionGenerator->getQueryHintName(), $conditionGenerator->getQueryHintValue());
     }
 
 Effectively the two samples do the same, except that ``getQueryHintName``
@@ -347,14 +344,16 @@ and ``getQueryHintValue`` don't exist for the ``NativeQueryConditionGenerator``.
 
         $users = $statement->getResult();
 
+    Or you can use a :ref:`pre_condition`.
+
 Mapping a field to multiple columns
 ***********************************
 
 Instead of searching in a single column it's possible to search in multiple
-columns for the same field. In practice this will work the same as using
+columns for the same SearchField. In practice this will work the same as using
 the same values for other fields.
 
-In the example below field ``name`` will search in both the user's ``first``
+In the example below SearchField ``name`` will search in both the user's ``first``
 and ``last`` name columns (as ``OR`` case). And it's still possible to search
 with only the first and/or last name.
 
@@ -390,8 +389,8 @@ be configured just as easy.
 
 .. note::
 
-    There are two different CachedConditionGenerators,
-    one for the ``DqlConditionGenerator`` and one of the
+    There are two different CachedConditionGenerators, one for the
+    ``DqlConditionGenerator`` and one for the
     ``NativeQueryConditionGenerator``.
 
 .. code-block:: php
@@ -437,9 +436,10 @@ Conversions
 
 Conversions for Doctrine ORM are similar to the DataTransformers
 used for transforming user-input to a normalized data format. Except that
-the transformation happens in a single direction, and uses normalized data.
+the transformation happens in a single direction.
 
 Field and Value Conversions are handled by the :doc:`Doctrine DBAL extension <dbal>`.
+You can read more about them in the :doc:`conversions` chapter.
 
 .. note::
 
@@ -454,9 +454,6 @@ Next Steps
 Now that you have completed the basic installation and configuration,
 and know how to query the database for results. You are ready to learn
 about more advanced features and usages of this extension.
-
-You may have noticed the word "conversions", now it's time learn more
-about this! :doc:`conversions`.
 
 And if you get stuck with querying, there is a :doc:`Troubleshooter <troubleshooting>`
 to help you. Good luck.

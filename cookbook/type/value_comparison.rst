@@ -14,8 +14,8 @@ working with objects.
 
 .. note::
 
-    Fields with range support enabled must have a Value Comparer
-    in order to work properly. A missing Comparer will mark
+    Fields with range support enabled must have a Value Comparator
+    in order to work properly. A missing Comparator will mark
     every range in the field invalid!
 
 Assuming you have a field that handles invoice numbers as an InvoiceNumber
@@ -26,37 +26,34 @@ and you configured that the field supports ranges.
 .. tip::
 
     See :doc:`data_transformers` on how to transform a user input to
-    an InvoiceNumber.
+    an ``InvoiceNumber``.
 
 Creating the Comparator
 -----------------------
 
-Create an ``InvoiceNumberComparison`` class - this class will be responsible
-for comparing values for equality and lower/higher ``InvoiceNumber`` objects:
+Create an ``InvoiceNumberComparator`` class - this class will be responsible
+for comparing values for equality and lower/higher ``InvoiceNumber`` objects::
 
-.. code-block:: php
-    :linenos:
+    // src/Acme/Invoice/Search/ValueComparator/InvoiceNumberComparator.php
 
-    // src/Acme/Invoice/Search/ValueComparison/InvoiceNumberComparison.php
-
-    namespace Acme\Invoice\Search\ValueComparison;
+    namespace Acme\Invoice\Search\ValueComparator;
 
     use Acme\Invoice\InvoiceNumber;
-    use Rollerworks\Component\Search\ValueComparisonInterface;
+    use Rollerworks\Component\Search\ValueComparator;
 
-    class InvoiceNumberComparison implements ValueComparisonInterface
+    final class InvoiceNumberComparator implements ValueComparator
     {
-        public function isHigher($higher, $lower, array $options)
+        public function isHigher($higher, $lower, array $options): bool
         {
             return $higher->isHigher($lower);
         }
 
-        public function isLower($lower, $higher, array $options)
+        public function isLower($lower, $higher, array $options): bool
         {
             return $lower->isLower($higher);
         }
 
-        public function isEqual($value, $nextValue, array $options)
+        public function isEqual($value, $nextValue, array $options): bool
         {
             return $value->equals($nextValue);
         }
@@ -75,14 +72,11 @@ for comparing values for equality and lower/higher ``InvoiceNumber`` objects:
     When ``isLower()`` and ``isHigher()`` are not supported, then both
     methods should be return ``false``.
 
-Using the Comparer
-------------------
+Using the Comparator
+--------------------
 
-Now that you have the comparer built, you just need to add it to your
-invoice field type.
-
-.. code-block:: php
-    :linenos:
+Now that you have the Comparator built, you need to add it to your
+invoice field type::
 
     // src/Acme/Invoice/Search/Type/InvoiceNumberType.php
 
@@ -92,30 +86,24 @@ invoice field type.
     use Rollerworks\Component\Search\AbstractFieldType;
     use Rollerworks\Component\Search\Exception\InvalidConfigurationException;
     use Rollerworks\Component\Search\FieldConfigInterface;
-    use Rollerworks\Component\Search\ValueComparisonInterface;
-    use Rollerworks\Component\Search\Value\ValuesBag;
+    use Rollerworks\Component\Search\Value\{Compare, Range};
 
-    class InvoiceNumberType extends AbstractFieldType
+    final class InvoiceNumberType extends AbstractFieldType
     {
-        private $valueComparison;
+        private $valueComparator;
 
-        public function __construct(ValueComparisonInterface $valueComparison)
+        public function __construct()
         {
-            $this->valueComparison = $valueComparison;
+            $this->valueComparator = new InvoiceNumberComparator();
         }
 
         public function buildType(FieldConfigInterface $config, array $options)
         {
-            $config->setValueComparison($this->valueComparison);
-            $config->setValueTypeSupport(ValuesBag::VALUE_TYPE_RANGE, true);
-            $config->setValueTypeSupport(ValuesBag::VALUE_TYPE_COMPARISON, true);
+            $config->setValueComparator($this->valueComparator);
+            $config->setValueTypeSupport(Compare::class, true);
+            $config->setValueTypeSupport(Range::class, true);
 
             $config->addViewTransformer(new InvoiceNumberTransformer());
-        }
-
-        public function getName()
-        {
-            return 'invoice_number';
         }
     }
 
@@ -125,12 +113,12 @@ and optimizers can optimize the generated search condition.
 Optimizing incremented values
 -----------------------------
 
-Now that your type supports comparing values, you can extend the comparer with
+Now that your type supports comparing values, you can extend the Comparator with
 the ability to calculate increments.
 
-Calculating increments is helps with optimizing single incremented values.
-For example: ``1, 2, 3, 4, 5`` can be converted to a ``1-5`` range which will decrease
-the size of the search condition and speed-up the search operation.
+Calculating increments helps with optimizing single incremented values.
+For example: ``1, 2, 3, 4, 5`` can be converted to a ``1 ~ 5`` range which will
+simplify the search condition and speed-up the search operation.
 
 .. note::
 
@@ -138,12 +126,9 @@ the size of the search condition and speed-up the search operation.
     :class:``Rollerworks\\Component\\Search\\ConditionOptimizer\\ValuesToRange``
     optimizer. So make sure its enabled.
 
-Instead of implementing the ``ValueComparisonInterface`` implement the
-``ValueIncrementerInterface`` which extends the ``ValueComparisonInterface``
-and adds the ``getIncrementedValue`` method for calculating increments.
-
-.. code-block:: php
-    :linenos:
+Instead of implementing the ``ValueComparator`` interface, you implement the
+``ValueIncrementer`` interface (which extends the ``ValueComparator`` interface)
+and add the ``getIncrementedValue`` method for calculating increments::
 
     // src/Acme/Invoice/Search/ValueComparison/InvoiceNumberComparison.php
 
@@ -154,22 +139,22 @@ and adds the ``getIncrementedValue`` method for calculating increments.
 
     class InvoiceNumberComparison implements ValueIncrementerInterface
     {
-        public function isHigher($higher, $lower, array $options)
+        public function isHigher($higher, $lower, array $options): bool
         {
             return $higher->isHigher($lower);
         }
 
-        public function isLower($lower, $higher, array $options)
+        public function isLower($lower, $higher, array $options): bool
         {
             return $lower->isLower($higher);
         }
 
-        public function isEqual($value, $nextValue, array $options)
+        public function isEqual($value, $nextValue, array $options): bool
         {
             return $value->equals($nextValue);
         }
 
-        public function getIncrementedValue($value, array $options, $increments = 1)
+        public function getIncrementedValue($value, array $options, int $increments = 1)
         {
             return new InvoiceNumber($value->getYear(), $value->getNumber() + $increments);
         }
@@ -177,9 +162,9 @@ and adds the ``getIncrementedValue`` method for calculating increments.
 
 .. note::
 
-    Technically it's possible to optimize ``"2015-099", "2015-100", "2015-0001"``
-    to ``"2015-099"-"2015-0001"``, but only when we know if "2015-100" is the last
+    Technically it's possible to optimize ``2015-099, 2015-100, 2015-000"``
+    to ``2015-099 ~ 2015-0001``, but only when we know if "2015-100" is the last
     invoice for the year 2015.
 
-Cool, you're done! The new ``InvoiceNumberComparison`` can be registered
-as any normal value comparer.
+Cool, you're done! The new ``InvoiceNumberComparison`` can be set as your
+field's ValueComparator.

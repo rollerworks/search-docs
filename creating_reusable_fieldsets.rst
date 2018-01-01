@@ -9,10 +9,11 @@ Using a FieldSetConfigurator makes it possible for the FieldSet to
 be serialized and makes your configuration easily sharable for other
 processors.
 
-And, creating FieldSetConfigurator is no more different then using
+And, creating a FieldSetConfigurator is no more different then using
 the builder.
 
-Say your user registration system has the following columns (with the storage type):
+Say your user registration system has the following columns (with there respective
+storage type):
 
 * ``user_id``: integer
 * ``username``: text
@@ -31,12 +32,9 @@ and then later map these fields to a column.
 
     A FieldSet can be used for any data system or storage, if the FieldSet was
     aware of your data system it would be only possible for one storage.
-    And switching to ElasticSearch from Doctrine ORM would be more difficult.
+    And switching from Doctrine ORM to ElasticSearch would be more difficult.
 
-Ok, now lets create a FieldSetConfigurator:
-
-.. code-block:: php
-    :linenos:
+Ok, now lets create a FieldSetConfigurator::
 
     namespace Acme\Search\FieldSet;
 
@@ -59,10 +57,7 @@ Ok, now lets create a FieldSetConfigurator:
         }
     }
 
-That's it. The ``UsersFieldSet`` is now ready for usage.
-
-.. code-block:: php
-    :linenos:
+That's it. The ``UsersFieldSet`` is now ready for usage::
 
     use Acme\Search\FieldSet;
     use Rollerworks\Component\Search\Searches;
@@ -72,13 +67,7 @@ That's it. The ``UsersFieldSet`` is now ready for usage.
     $fieldSet = $searchFactory->createFieldSet(FieldSet\UsersFieldSet::class);
 
 Alternatively when your FieldSetConfigurator has dependencies you can use
-a factory-constructor with the ``LazyFieldSetRegistry``.
-
-*Integration extensions provide a similar mechanise, see the integration
-section for details.*
-
-.. code-block:: php
-    :linenos:
+a factory-constructor with the ``LazyFieldSetRegistry``::
 
     use Acme\Search\FieldSet;
     use Rollerworks\Component\Search\LazyFieldSetRegistry;
@@ -86,6 +75,9 @@ section for details.*
     $fieldSetRegistry = LazyFieldSetRegistry::create([FieldSet\UsersFieldSet::class => function () {
         return new FieldSet\UsersFieldSet();
     ]);
+
+*Framework integrations provide a similar mechanise, see the integrations
+section for details.*
 
 .. note::
 

@@ -182,7 +182,6 @@ Supported operators are:
 * ``~*`` (contains)
 * ``~>`` (starts with)
 * ``~<`` (ends with)
-* ``~?`` (regex matching)
 * ``~=`` (equals)
 
 And not the excluding equivalent.
@@ -190,31 +189,17 @@ And not the excluding equivalent.
 * ``~!*`` (does not contain)
 * ``~!>`` (does not start with)
 * ``~!<`` (does not end with)
-* ``~!?`` (does not match regex)
 * ``~!=`` (equals)
 
 .. code-block:: php
 
-    field: ~> foo, ~*"bar", ~? "^foo|bar$"
+    field: ~> foo, ~*"bar";
 
 To mark the pattern case-insensitive add an 'i' directly after the '~'.
 
 .. code-block:: php
 
-    field: ~i> foo, ~i!* "bar", ~i? "^foo|bar$";
-
-.. note::
-
-    A regex is limited to simple POSIX expressions. Actual usage is handled
-    by the storage layer, and may not fully support complex expressions.
-
-    Most matchers can be easily solved without a regex, always try to
-    use a normal matcher before trying a regex.
-
-.. caution::
-
-    In most languages the Regex would start and end with a delimit,
-    but in StringQuery this is not the case.
+    field: ~i> foo, ~i!* "bar";
 
 Subgroups
 ---------

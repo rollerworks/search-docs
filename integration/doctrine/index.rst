@@ -24,13 +24,13 @@ separate extensions.
     using Doctrine ORM may cause unresolvable performance problems.
 
     Due to the way ORM querying works not all conditions can be optimized
-    for the best performance. Consider using :doc:`/integration/elastic_search`
+    for the best performance. Consider using :doc:`/integration/elasticsearch`
     instead.
 
     See also: http://ocramius.github.io/blog/doctrine-orm-optimization-hydration/
 
 Support for document based storage is not possible due to technical limitations.
-If you need this, consider using :doc:`/integration/elastic_search`.
+If you need this, consider using :doc:`/integration/elasticsearch`.
 
 .. toctree::
     :maxdepth: 2

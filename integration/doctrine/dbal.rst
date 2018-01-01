@@ -62,10 +62,7 @@ object instances.
 
     A ``ConditionGenerator`` generates an SQL where-clause 'condition'.
 
-Initiating the ``DoctrineDbalFactory`` is as simple as.
-
-.. code-block:: php
-    :linenos:
+Initiating the ``DoctrineDbalFactory`` is as simple as::
 
     use Rollerworks\Component\Search\Doctrine\Dbal\DoctrineDbalFactory;
 
@@ -83,7 +80,7 @@ Using the ConditionGenerator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ConditionGenerator generates an SQL Where-clause for a relational database
-like PostgreSQL, MySQL, MSSQL, SQLite or Oracle.
+like PostgreSQL, MySQL, MSSQL, SQLite or Oracle OCI.
 
 .. caution::
 
@@ -94,10 +91,7 @@ like PostgreSQL, MySQL, MSSQL, SQLite or Oracle.
     Meaning that when you generated a query with the SQLite database driver
     this query will not work on MySQL.
 
-First create a ``ConditionGenerator``:
-
-.. code-block:: php
-    :linenos:
+First create a ``ConditionGenerator``::
 
     // ...
 
@@ -110,7 +104,7 @@ First create a ``ConditionGenerator``:
     $conditionGenerator = $doctrineDbalFactory->createConditionGenerator($connection, $searchCondition);
 
 Before the condition can be generated, the ConditionGenerator needs to know how
-your fields are mapped to which columns column and table/schema. To configure this
+your fields are mapped to which columns and table/schema. To configure this
 field-to-column mapping, use the ``setField`` method on the ConditionGenerator:
 
 .. code-block:: php
@@ -130,21 +124,22 @@ field-to-column mapping, use the ``setField`` method on the ConditionGenerator:
      * Tip: The `mapping-name` doesn't have to be same as $column, but using a clear name
      * will help with trouble shooting.
      *
-     * @param string $fieldName  Name of the search field as registered in the FieldSet or
-     *                           `field-name#mapping-name` to configure a secondary mapping
-     * @param string $column     Database table column-name
-     * @param string $alias      Table alias as used in the query "u" for `FROM users AS u`
-     * @param string|Type $type  Doctrine DBAL supported type, eg. 'string' (not 'varchar')
+     * @param string $fieldName Name of the search field as registered in the FieldSet or
+     *                          `field-name#mapping-name` to configure a secondary mapping
+     * @param string $column    Database table column-name
+     * @param string $alias     Table alias as used in the query "u" for `FROM users AS u`
+     * @param string $type      Doctrine DBAL supported type, eg. string (not text)
      *
      * @throws UnknownFieldException  When the field is not registered in the fieldset
      * @throws BadMethodCallException When the where-clause is already generated
      *
      * @return $this
      */
-    $conditionGenerator->setField(string $fieldName, string $column, string $alias = null, $type = 'string');
+    public function setField(string $fieldName, string $column, string $alias = null, string $type = 'string');
 
 The first parameter is the search field-name as registered in the provided FieldSet
 (with optionally a mapping-name to allow mapping a field to multiple columns).
+
 Followed by the database column-name (without any quoting), the table alias that
 corresponds with the table alias in the Query, and last the dbal-type
 (as provided by Doctrine DBAL).
@@ -167,7 +162,7 @@ corresponds with the table alias in the Query, and last the dbal-type
     If you try to configure a column-mapping for a unregistered SearchField
     the ConditionGenerator will fail with an exception.
 
-After this you are ready to generate the SQL condition.
+After configuring you are ready to generate the query condition.
 
 Generating the Condition
 ************************
@@ -231,6 +226,8 @@ Generating the Condition
         $statement->bindValue(1, $id);
         $statement->execute();
 
+    Or you can use a :ref:`pre_condition`.
+
 Mapping a field to multiple columns
 ***********************************
 
@@ -239,12 +236,12 @@ columns for the same field. In practice this will work the same as using
 the same values for other fields.
 
 In the example below field ``name`` will search in both the user's ``first``
-and ``last`` name columns (as ``OR`` case). And it's still possible to search
+and ``last`` name columns (as ``OR`` case). *And* it's still possible to search
 with only the first and/or last name.
 
 .. code-block:: php
 
-    $query = 'SELECT u.name AS name, u.id AS id FROM users AS u WHERE id = ?';
+    $query = 'SELECT u.name AS name, u.id AS id FROM users AS u';
 
     $conditionGenerator = $doctrineDbalFactory->createConditionGenerator($connection, $searchCondition);
     $conditionGenerator->setField('name#first', 'first', 'u', 'string');
@@ -252,13 +249,12 @@ with only the first and/or last name.
     $conditionGenerator->setField('first-name', 'first', 'u', 'string');
     $conditionGenerator->setField('last-name', 'last', 'u', 'string');
 
-    $whereClause = $conditionGenerator->getWhereClause(' AND ');
+    $whereClause = $conditionGenerator->getWhereClause('WHERE');
 
     // Add the Where-clause
     $query .= $whereClause;
 
     $statement = $connection->prepare($query);
-    $statement->bindValue(1, $id);
     $statement->execute();
 
 Caching the Where-clause
@@ -272,10 +268,7 @@ which can handle caching of the ConditionGenerator for you.
 
 Plus, usage is no different then using the ``SqlConditionGenerator``,
 the CachedConditionGenerator decorates the SqlConditionGenerator and can
-be configured just as easy.
-
-.. code-block:: php
-    :linenos:
+be configured just as easy::
 
     // ...
 
@@ -298,7 +291,13 @@ be configured just as easy.
     $statement = $connection->query($query);
 
 The cache-key is a hashed (sha256) combination of the SearchCondition
-(root ValuesGroup and FieldSet name) and configured field mappings.
+(root ValuesGroup and FieldSet set-name) and configured field mappings.
+
+.. note::
+
+    Changes in the FieldSet's Fields configuration are not automatically
+    detected. Keep your cache life-time short and purge existing entries
+    when changing your FieldSet configurations.
 
 Next Steps
 ----------

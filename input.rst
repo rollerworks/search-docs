@@ -4,22 +4,19 @@
 Input Processors
 ================
 
-Input Processors transforms the input to a ``SearchCondition``.
+Input Processors transform the input to a ``SearchCondition``.
 Each processor supports exactly one specific format, which is described
-in the reference section of the manual.
+in the reference section of this manual.
 
 This chapter explains how you use the processors and how you configure
-them to limit the conditions complexity.
+them to limit the conditions allowed complexity.
 
 Loading processors
 ------------------
 
-Instead of constructing the processors yourself it's also possible,
-to lazily load them using the ``InputProcessorLoader``, which allows
-to load processors by format (without worrying about loading unrelated
-services):
-
-.. code-block:: php
+Instead of constructing the processors yourself it's best to lazily load
+them using the ``InputProcessorLoader``, which allows to safely load
+processors by format::
 
     use Rollerworks\Component\Search\Loader\InputProcessorLoader;
 
@@ -46,14 +43,14 @@ services):
 Values limit
 ------------
 
-To prevent overloading your system the provided input can limited
-a by values (per group), maximum amount of groups and/or group nesting
-level.
+To prevent overloading your system the allowed complexity of the provided input
+can be limited a by values (per group), maximum amount of groups and/or a group
+maximum nesting level.
 
 You can configure a processor using :class:`Rollerworks\\Component\\Search\\Input\\ProcessorConfig`.
 
-By default the input is limited to 1000 values per group, 100 groups
-in total, with a nesting level of 100 levels deep.
+By default the input is limited to a 100 values per field (per group), 10 groups (per group)
+in total, with a maximum nesting level of 5 levels deep.
 
 You can change these limits by calling ``setLimitValues``, ``setMaxGroups``
 and ``setMaxNestingLevel`` respectively.
@@ -63,9 +60,9 @@ and ``setMaxNestingLevel`` respectively.
         $inputProcessor = ...;
 
         $config = new ProcessorConfig($this->getFieldSet());
-        $config->setMaxNestingLevel(1);
+        $config->setMaxNestingLevel(2);
         $config->setLimitValues(50);
-        $config->setMaxGroups(10);
+        $config->setMaxGroups(5);
 
         $input = ...;
         $condition$inputProcessor->process($config, $input);

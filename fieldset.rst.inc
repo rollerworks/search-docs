@@ -16,7 +16,7 @@ Say your user registration system has the following columns (with the storage ty
 
 You want to allow searching in all columns except password, because RollerworksSearch
 is agnostic to your data system you need tell the system which fields there are
-and then later map these fields to a column.
+and then later map these fields to a (table) column.
 
 .. note::
 

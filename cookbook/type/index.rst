@@ -30,7 +30,7 @@ Defining the Field Type
 -----------------------
 
 In order to create the custom field type, first you have to create the class representing the type.
-In this situation the class holding the field type will be called ClientIdType and the file will be
+In this situation the class holding the field type will be called ``ClientIdType`` and the file will be
 stored in the default location for search field types, which is ``<VendorName>\\Search\\Type``.
 
 Make sure the field extends :class:`Rollerworks\\Component\\Search\\Field\\AbstractFieldType`:
@@ -80,7 +80,7 @@ There are three methods that are particularly important:
 ``configureOptions()``
     This defines options for your field type that can be used in ``buildType()``
     and ``buildView()``. There are a lot of options common to all fields
-    (see :doc:`/reference/types/field`), but you can create as any others
+    (see :doc:`/reference/types/field`), but you can create as many others
     as needed.
 
 Creating the ClientIdTransformer
@@ -156,7 +156,7 @@ using a ``SearchExtension``.
 .. note::
 
     Framework integrations use a similar lazy loading system,
-    see the there implementation details for more information.
+    see there implementation details for more information.
 
 .. code-block:: php
     :linenos:
@@ -222,7 +222,7 @@ Conclusion
 ----------
 
 That's it, you now know the basics for creating custom field types,
-but field types don't stop here. There much more you can do.
+but field types don't stop here. There's much more you can do.
 
 Learn more about: :doc:`data_transformers`, :doc:`value_comparison`
 :doc:`building_view` and how to :doc:`unit_testing`

@@ -13,7 +13,10 @@ fast as possible.
 In this manual you will find everything to get started and make the most
 of the library. Start by :doc:`learning the basic terms <introduction>`,
 then begin with :doc:`installing`, follow-up with :doc:`processing_searches`
-and continue with integration extensions for your framework of choice.
+and finally continue with integration extensions for your framework of choice.
+
+Need more? The Cookbook provides you with some recipes to cook-up your
+own field types, field type extensions, and framework integration.
 
 If you need any help don't hesitate to get in touch at the
 `RollerworksSearch Gitter Channel`_.

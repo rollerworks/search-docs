@@ -2,8 +2,8 @@ Value and Column Conversions
 ============================
 
 Conversions for Doctrine DBAL are similar to the DataTransformers
-used for transforming user-input to a normalized data format. Except that
-the transformation happens in a single direction, and uses "model" values.
+used for transforming user-input to a model data-format. Except that
+the transformation happens in a single direction and are applied SQL.
 
 So why are are they useful? The power of relational databases is
 storing complex data structures, and allow to retrieve these records
@@ -30,35 +30,46 @@ So you can really utilize the power of your SQL queries.
 .. note::
 
     Unlike DataTransformers you`re limited to *one* converter per search
-    field. So setting an new convert (of the same) will overwrite previous
-    one.
+    field. So setting an new conversion will overwrite previous one.
 
 Conversions are registered by setting the conversion object on the
 ``SearchField`` by using the ``configureOptions`` method of the field type.
+
 Using:
 
    .. code-block:: php
 
        public function configureOptions(OptionsResolver $resolver)
        {
-           $resolver->setDefaults(
-               array('doctrine_dbal_conversion' => new MyConversionClass())
-           );
+           $resolver->setDefaults([
+               'doctrine_dbal_conversion' => new MyConversionClass(),
+           ]);
        }
 
 .. tip::
 
     The ``doctrine_dbal_conversion`` option also accepts a ``Closure`` object
-    for lazy initializing, the closure is executed when creating the
-    query-generator.
+    for lazy initializing, the closure is executed when initializing the
+    condition-generator.
 
-Before you get started, it's important to know the following about converters:
+   .. code-block:: php
 
-#. Converters should be stateless, meaning they don't remember anything
-   about there operations. This is because the calling order of converter methods
-   is not predictable and converters are only executed during the
-   generation process, so using a cached result will not execute them.
-#. Each converter method receives a `:class:`Rollerworks\\Component\\Search\\Doctrine\\Dbal\\ConversionHints`
+       public function configureOptions(OptionsResolver $resolver)
+       {
+           $resolver->setDefaults([
+               'doctrine_dbal_conversion' => function () {
+                   return new MyConversionClass())
+               },
+           ]);
+       }
+
+Before you get started, it's important to know the following about conversions:
+
+#. Conversion should be stateless, meaning they don't remember anything
+   about there operations. This is because the calling order of conversion methods
+   is not predictable and conversions are only executed during the
+   generation process, so using a cached result does not execute them.
+#. Each method receives a :class:`Rollerworks\\Component\\Search\\Doctrine\\Dbal\\ConversionHints`
    object which provides access to the used database connection, SearchField
    configuration, column and optionally the conversionStrategy.
 #. The ``$options`` array provides the options of the SearchField.
@@ -83,10 +94,7 @@ or anything that can be used as a replacement.
 
 This example shows how to get the age of a person in years from their date
 of birth. In short, the ``u.birthdate`` column is converted to an actual
-age in years.
-
-.. code-block:: php
-    :linenos:
+age in years::
 
     namespace Acme\User\Search\Dbal\Conversion;
 
@@ -95,7 +103,7 @@ age in years.
 
     class AgeConversion implements ColumnConversion
     {
-        public function convertColumn($column, array $options, ConversionHints $hints): string
+        public function convertColumn(string $column, array $options, ConversionHints $hints): string
         {
             if ('postgresql' === $hints->connection->getDatabasePlatform()->getName()) {
                 return "TO_CHAR('YYYY', AGE($column))";
@@ -152,10 +160,7 @@ with only PHP.
 
 This example describes how to implement a MySQL specific column type called Point.
 
-The point class:
-
-.. code-block:: php
-    :linenos:
+The point class::
 
     namespace Acme\Geo;
 
@@ -164,37 +169,24 @@ The point class:
         private $latitude;
         private $longitude;
 
-        /**
-         * @param float $latitude
-         * @param float $longitude
-         */
-        public function __construct($latitude, $longitude)
+        public function __construct(float $latitude, float $longitude)
         {
             $this->latitude  = $latitude;
             $this->longitude = $longitude;
         }
 
-        /**
-         * @return float
-         */
-        public function getLatitude()
+        public function getLatitude(): float
         {
             return $this->latitude;
         }
 
-        /**
-         * @return float
-         */
-        public function getLongitude()
+        public function getLongitude(): float
         {
             return $this->longitude;
         }
     }
 
-And the GeoConversion class:
-
-.. code-block:: php
-    :linenos:
+And the GeoConversion class::
 
     namespace Acme\Geo\Search\Dbal\Conversion;
 
@@ -204,7 +196,7 @@ And the GeoConversion class:
 
     class GeoConversion implements ValueConversion
     {
-        public function convertValue($input, array $options, ConversionHints $hints)
+        public function convertValue($input, array $options, ConversionHints $hints): string
         {
             if ($value instanceof Point) {
                 $value = sprintf('POINT(%F %F)', $input->getLongitude(), $input->getLatitude());
@@ -236,13 +228,14 @@ both dates and integer (age) values? To make this possible you need to add
 conversion-strategies. Conversion-strategies are based on the `Strategy pattern`_
 and work very simple and straightforward.
 
-A conversion-strategy is determined by the given value, each mapping
-and value gets a determined strategy assigned. If there is no strategy
-(which is the default) ``null`` is used instead. Then each strategy is
-applied per field and it's values, meaning that a field and the related
-values are grouped together.
+A conversion-strategy is determined by the given value.
 
-Say you have the following values-list for the birthday type: ``2010-01-05, 2010-05-05, 5``.
+.. note::
+
+    When conversion strategies are not supported, or no was determined
+    the conversion-strategy defaults to 0.
+
+Say you have the following values for the birthday type: 2010-01-05, 2010-05-05, 5.
 The first two values are dates, but third is an age. With the conversion
 strategy enabled the system will process the values as follow;
 
@@ -252,37 +245,24 @@ strategy enabled the system will process the values as follow;
     So ``2010-01-05`` and ``2010-05-05`` get strategy-number 1.
     And the ``5`` value gets strategy-number 2.
 
-    Now when the query is generated the converter's methods receive the strategy
+    Now when the condition is generated the conversion methods receive the strategy
     using the ``conversionStrategy`` property of the ``ConversionHints``, which
-    helps to determine how the conversion should happen.
-
-    But there is more to this idea, as the values don't need any SQL logic
-    for the value conversion the generator can use the ``IN`` statement to
-    group values of the same strategy together.
-
-    So in the end you will have something like this:
-
-    .. code-block:: sql
-
-        (((u.birthday IN('2010-01-05', '2010-05-05') OR search_conversion_age(u.birthday) IN(5))))
+    helps to determine how the conversion should be applied.
 
 Implementing conversion-strategies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To make your own conversions support strategies you need to
+To enable strategies for conversions they need to
 implement the :class:`Rollerworks\\Component\\Search\\Doctrine\\Dbal\\StrategySupportedConversion`
 interface and the ``getConversionStrategy`` method.
 
 .. note::
 
-    If your conversion supports both the column and value conversions
+    If the conversion supports both the column and value conversions
     then both conversion methods will receive the determined strategy.
 
-The following example uses a simplified version of AgeConversion class already
-provided by RollerworksSearch.
-
-.. code-block:: php
-    :linenos:
+The following example uses a simplified version of the ``AgeConversion`` which is
+provided by RollerworksSearch::
 
     use Doctrine\DBAL\Types\Type as DBALType;
     use Rollerworks\Component\Search\Doctrine\Dbal\ConversionHints;
@@ -303,20 +283,20 @@ provided by RollerworksSearch.
      */
     class AgeDateConversion implements StrategySupportedConversion, ColumnConversionInterface, ValueConversion
     {
-        public function getConversionStrategy($value, array $options, ConversionHints $hints)
+        public function getConversionStrategy($value, array $options, ConversionHints $hints): int
         {
-            if (!$value instanceof \DateTime && !ctype_digit((string) $value)) {
+            if (!$value instanceof \DateTimeInterface && !ctype_digit((string) $value)) {
                 throw new UnexpectedTypeException($value, '\DateTime object or integer');
             }
 
-            if ($value instanceof \DateTime) {
+            if ($value instanceof \DateTimeInterface) {
                 return $hints->field->getDbType()->getName() !== 'date' ? 2 : 3;
             }
 
             return 1;
         }
 
-        public function convertColumn($column, array $options, ConversionHints $hints): string
+        public function convertColumn(string $column, array $options, ConversionHints $hints): string
         {
             if (3 === $hints->conversionStrategy) {
                 return $column;
@@ -354,14 +334,6 @@ provided by RollerworksSearch.
 
 That's it, your conversion is now ready for usage.
 
-.. caution::
-
-    A strategy is expected to an integer, the are however no technical
-    limitations to enforce this. The strategy must be at least a scalar value.
-
-    When the returned strategy is an integer as string ``'5'``,
-    the final strategy will be ``5`` as an actual integer.
-
 Testing Conversions
 -------------------
 
@@ -369,7 +341,7 @@ To test if the conversions work as expected your can compare the generated,
 SQL with what your expecting, however there's no promise that the SQL
 structure will remain the same for the future releases.
 
-The only way to ensure your conversions work is actually run it against an
+The only way to ensure your conversions work is to run it against an
 actual database with existing records.
 
 .. _`SqliteConnectionSubscriber.php`: https://github.com/rollerworks/rollerworks-search-doctrine-dbal/blob/master/src/EventSubscriber/SqliteConnectionSubscriber.php
