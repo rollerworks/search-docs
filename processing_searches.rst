@@ -183,6 +183,23 @@ to ``json``. Or ``xml`` if you prefer this.
     ``ServerRequestInterface`` body-parameter. The loader ensures
     only valid formats are accepted.
 
+Working with multiple processors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you need to support multiple processors per page (either multiple datagrids).
+You need to set the request-prefix with ``setRequestPrefix('user')``::
+
+    $processorConfig = new ProcessorConfig($userFieldSet);
+    $processorConfig->setRequestPrefix('user');
+
+    ...
+
+    if ($searchPayload->isChanged() && $searchPayload->isValid()) {
+        // Redirect to this page with the search-code provided.
+        header('Location: /search?search['.$processorConfig->getRequestPrefix().']='.$searchPayload->searchCode);
+        exit();
+    }
+
 Improving performance
 ---------------------
 
